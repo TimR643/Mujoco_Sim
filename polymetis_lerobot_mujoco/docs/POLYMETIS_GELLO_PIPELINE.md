@@ -202,6 +202,7 @@ reachable:
 conda activate <your-gello-polymetis-env>
 python -c "import polymetis; print(polymetis.__file__)"
 python -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
+which python
 CAMERA_FLAG=--no-camera \
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
 ```
@@ -222,6 +223,7 @@ mamba activate polymetis
 mamba install -c pytorch -c fair-robotics -c aihabitat -c conda-forge polymetis
 python -c "from polymetis import RobotInterface, GripperInterface; print('polymetis ok')"
 python -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
+which python
 CAMERA_FLAG=--no-camera \
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
 ```
@@ -235,3 +237,31 @@ Recording through Polymetis can run in the Polymetis conda environment and write
 data to `/home/fer_ros2_sim/data/lerobot_mujoco_cube_pick`. Training can then run
 from `/opt/fer_lerobot_venv` with `train_lerobot_act.sh`. This avoids forcing
 newer LeRobot dependencies into the older Polymetis Python environment.
+
+## 14. Troubleshooting: conda Polymetis is active but the recorder still uses `/opt/fer_lerobot_venv`
+
+If the traceback starts with `/opt/fer_lerobot_venv/bin/fer-polymetis-record-hardcoded-pick`,
+you are running the old console entry point from the LeRobot venv instead of the
+currently activated Polymetis conda Python. The wrapper scripts now avoid that by
+calling `python -m polymetis_lerobot_mujoco...` and adding the package checkout to
+`PYTHONPATH`. Pull this change and run the wrapper script by absolute path:
+
+```bash
+cd /home/fer_ros2_sim/polymetis_lerobot_mujoco
+git pull  # if this directory is a git checkout; otherwise update it from the host mount
+micromamba activate polymetis_py38
+which python
+python -c "from polymetis import RobotInterface, GripperInterface; print('real polymetis ok')"
+CAMERA_FLAG=--no-camera \
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
+```
+
+A second symptom of an outdated checkout is:
+
+```text
+ERROR: Package 'polymetis-lerobot-mujoco' requires a different Python: 3.8.15 not in '>=3.10'
+```
+
+The package metadata has been lowered to `requires-python = ">=3.8"`. If you still
+see `>=3.10`, the container is using an older copy of this repository. Pull or
+remount the updated repository, then rerun the editable install.

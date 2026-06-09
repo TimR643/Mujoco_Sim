@@ -155,6 +155,8 @@ from the directory that contains `.docker/`.
    ```
 6. After installing/activating your real `gello_software` Polymetis environment
    and starting the Polymetis MuJoCo endpoint, record the real hardcoded pick.
+   The wrapper uses the currently active `python`, so activate the Polymetis
+   conda/micromamba environment before calling it.
    The detailed conda/mamba setup is documented in
    `polymetis_lerobot_mujoco/docs/POLYMETIS_GELLO_PIPELINE.md`.
    ```bash
