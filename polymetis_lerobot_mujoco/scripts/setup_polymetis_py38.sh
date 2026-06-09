@@ -24,6 +24,20 @@ exec "$MICROMAMBA_BIN" "$@"
 SHIM
 chmod +x "$CONDA_SHIM"
 
+# Some gello_software launch scripts source a hardcoded Miniconda profile file.
+# Provide a compatibility profile that delegates activation to micromamba so
+# those scripts can run in this container without installing Miniconda.
+MINICONDA_PROFILE=${MINICONDA_PROFILE:-$HOME/miniconda3/etc/profile.d/conda.sh}
+mkdir -p "$(dirname "$MINICONDA_PROFILE")" "$HOME/miniconda3/bin"
+cat > "$MINICONDA_PROFILE" <<PROFILE
+#!/usr/bin/env bash
+export MAMBA_ROOT_PREFIX="\${MAMBA_ROOT_PREFIX:-$HOME/micromamba}"
+if [ -x "$MICROMAMBA" ]; then
+  eval "\$("$MICROMAMBA" shell hook --shell bash)"
+fi
+PROFILE
+ln -sf "$CONDA_SHIM" "$HOME/miniconda3/bin/conda"
+
 "$MICROMAMBA" create -y -n "$ENV_NAME" -c conda-forge python=3.8 pip || true
 "$MICROMAMBA" install -y -n "$ENV_NAME" \
   -c pytorch -c fair-robotics -c aihabitat -c conda-forge \

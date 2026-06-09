@@ -20,6 +20,7 @@ RUN apt-get update && apt-get upgrade -y \
     nano \
     curl \
     wget \
+    tmux \
     build-essential \
     bzip2 \
     software-properties-common \

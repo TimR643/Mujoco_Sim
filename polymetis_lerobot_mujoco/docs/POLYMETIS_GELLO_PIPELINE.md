@@ -394,3 +394,34 @@ server, keep using the mock backend:
 ROBOT_BACKEND=mock CAMERA_FLAG=--no-camera \
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
 ```
+
+## 19. Troubleshooting: `start_gello_panda.sh` cannot find `conda.sh` or `tmux`
+
+Some `gello_software` launch scripts are written for a workstation Miniconda
+installation and source `/home/fer_ros2_sim/miniconda3/etc/profile.d/conda.sh`.
+This Docker image uses persistent `micromamba` instead. Rerun the setup helper
+after pulling this change; it creates a Miniconda-compatible profile shim and a
+`conda` command shim that delegate to micromamba:
+
+```bash
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/setup_polymetis_py38.sh
+```
+
+If you are using an already-running container that was built before `tmux` was
+added to the image, install it once inside that container or rebuild the image:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y tmux
+```
+
+Then activate Polymetis again and rerun the GELLO launcher:
+
+```bash
+export MAMBA_ROOT_PREFIX=/home/fer_ros2_sim/micromamba
+eval "$(/home/fer_ros2_sim/.local/bin/micromamba shell hook --shell bash)"
+micromamba activate polymetis_py38
+export PATH=/home/fer_ros2_sim/.local/bin:$PATH
+cd /home/fer_ros2_sim/gello_software
+./start_gello_panda.sh
+```
