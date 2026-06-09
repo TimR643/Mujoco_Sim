@@ -1,0 +1,17 @@
+<!--
+  FRAMOS D435e wrist camera snippet for a MuJoCo Franka Panda MJCF.
+
+  Add the <body> block inside the Panda wrist/hand body in your MJCF model. It is
+  intentionally MJCF-native and does not require robot_state_publisher, xacro, or
+  any ROS 2 controller. Expose the named camera through your MuJoCo renderer or a
+  virtual video device so the Polymetis/LeRobot recorder can read it with OpenCV.
+-->
+<body name="framos_d435e_wrist" pos="0.045 0 0.055" quat="1 0 0 0">
+  <geom name="framos_d435e_body" type="box" size="0.045 0.0125 0.0125" rgba="0.02 0.02 0.02 1" mass="0.10" />
+  <camera
+    name="framos_d435e_color"
+    pos="0.02 0 0"
+    quat="0.5 -0.5 0.5 -0.5"
+    fovy="58"
+    resolution="640 480" />
+</body>
