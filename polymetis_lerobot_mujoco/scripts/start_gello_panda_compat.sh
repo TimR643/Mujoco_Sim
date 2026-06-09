@@ -39,15 +39,20 @@ if [ ! -f "$START_SCRIPT" ]; then
   exit 1
 fi
 
-# A running tmux server keeps the environment from the first tmux invocation.
-# Push the activated Python/conda environment into the server before the legacy
-# launcher creates panes or sends commands.
-if tmux start-server >/dev/null 2>&1; then
-  tmux set-environment -g PATH "$PATH"
-  tmux set-environment -g MAMBA_ROOT_PREFIX "$MAMBA_ROOT_PREFIX"
-  tmux set-environment -g CONDA_PREFIX "${CONDA_PREFIX:-$MAMBA_ROOT_PREFIX/envs/$ENV_NAME}"
-  tmux set-environment -g PYTHONPATH "${PYTHONPATH:-}"
+# If a tmux server is already running, update its global environment. If no
+# server is running yet, do not call `tmux start-server`: a server without any
+# sessions exits immediately and later `set-environment` calls fail with
+# "no server running ...". In that normal no-server case, the first tmux command
+# in the legacy GELLO launcher starts the server and inherits this process
+# environment directly.
+if tmux list-sessions >/dev/null 2>&1; then
+  tmux set-environment -g PATH "$PATH" || true
+  tmux set-environment -g MAMBA_ROOT_PREFIX "$MAMBA_ROOT_PREFIX" || true
+  tmux set-environment -g CONDA_PREFIX "${CONDA_PREFIX:-$MAMBA_ROOT_PREFIX/envs/$ENV_NAME}" || true
+  tmux set-environment -g PYTHONPATH "${PYTHONPATH:-}" || true
   tmux set-option -g default-shell /bin/bash >/dev/null 2>&1 || true
+else
+  echo "No existing tmux server found; the GELLO launcher will start one with the current environment."
 fi
 
 cd "$GELLO_ROOT"

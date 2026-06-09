@@ -419,8 +419,10 @@ works without rebuilding the image:
 ```
 
 Then prefer the compatibility launcher instead of calling the legacy script
-manually. It activates `polymetis_py38`, verifies the Polymetis import, updates a
-running tmux server's environment, and finally executes `start_gello_panda.sh`:
+manually. It activates `polymetis_py38`, verifies the Polymetis import, updates an
+already-running tmux server when one exists, otherwise lets the legacy launcher
+start a new tmux server with the current environment, and finally executes
+`start_gello_panda.sh`:
 
 ```bash
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh
@@ -456,6 +458,21 @@ If your GELLO checkout or launcher has a different path, override it explicitly:
 
 ```bash
 GELLO_ROOT=/home/fer_ros2_sim/gello_software START_SCRIPT=/home/fer_ros2_sim/gello_software/start_gello_panda.sh /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh
+```
+
+
+### `no server running on /tmp/tmux-.../default` from the compatibility launcher
+
+That message meant the wrapper tried to force-create a tmux server and then set
+global tmux environment variables after the empty server had already exited. The
+wrapper no longer does that. If no tmux server exists, it now simply starts the
+legacy GELLO launcher and lets the first tmux command in that launcher create the
+server while inheriting the already-activated Polymetis environment.
+
+Use the same command again after pulling this fix:
+
+```bash
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh
 ```
 
 ### `libxml2_deactivate.sh: ... unbound variable` during `micromamba activate`
