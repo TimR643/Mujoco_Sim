@@ -20,6 +20,17 @@ cat > "$CONDA_SHIM" <<'SHIM'
 set -euo pipefail
 export MAMBA_ROOT_PREFIX="${MAMBA_ROOT_PREFIX:-$HOME/micromamba}"
 MICROMAMBA_BIN="${MICROMAMBA_BIN:-$HOME/.local/bin/micromamba}"
+if [ "${1:-}" = "activate" ]; then
+  # Executable shims cannot modify the parent shell. Legacy tmux commands often
+  # run `conda activate polymetis` after a failed `source .../conda.sh`; return
+  # success here so they can continue with the environment inherited from the
+  # launcher shell. The sourced profile below provides real activation when the
+  # shell supports it.
+  exit 0
+fi
+if [ "${1:-}" = "deactivate" ]; then
+  exit 0
+fi
 exec "$MICROMAMBA_BIN" "$@"
 SHIM
 chmod +x "$CONDA_SHIM"
@@ -30,13 +41,42 @@ chmod +x "$CONDA_SHIM"
 MINICONDA_PROFILE=${MINICONDA_PROFILE:-$HOME/miniconda3/etc/profile.d/conda.sh}
 mkdir -p "$(dirname "$MINICONDA_PROFILE")" "$HOME/miniconda3/bin"
 cat > "$MINICONDA_PROFILE" <<PROFILE
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 export MAMBA_ROOT_PREFIX="\${MAMBA_ROOT_PREFIX:-$HOME/micromamba}"
 if [ -x "$MICROMAMBA" ]; then
-  eval "\$("$MICROMAMBA" shell hook --shell bash)"
+  if [ -n "\${BASH_VERSION:-}" ]; then
+    eval "\$("$MICROMAMBA" shell hook --shell bash)"
+  else
+    eval "\$("$MICROMAMBA" shell hook --shell sh)"
+  fi
 fi
+conda() {
+  if [ "\${1:-}" = "activate" ]; then
+    shift
+    env_name="\${1:-$ENV_NAME}"
+    if [ "\$env_name" = "polymetis" ]; then
+      env_name="$ENV_NAME"
+    fi
+    micromamba activate "\$env_name"
+  elif [ "\${1:-}" = "deactivate" ]; then
+    micromamba deactivate
+  else
+    micromamba "\$@"
+  fi
+}
 PROFILE
 ln -sf "$CONDA_SHIM" "$HOME/miniconda3/bin/conda"
+
+# `/bin/sh` does not provide the non-POSIX `source` builtin. Some legacy tmux
+# commands still use `source path/to/conda.sh`; this no-op avoids an immediate
+# command-not-found failure in those shells. The launcher shell should already be
+# activated before starting tmux, so child panes inherit the correct PATH.
+SOURCE_SHIM=${SOURCE_SHIM:-$HOME/.local/bin/source}
+cat > "$SOURCE_SHIM" <<'SOURCE'
+#!/usr/bin/env sh
+exit 0
+SOURCE
+chmod +x "$SOURCE_SHIM"
 
 "$MICROMAMBA" create -y -n "$ENV_NAME" -c conda-forge python=3.8 pip || true
 "$MICROMAMBA" install -y -n "$ENV_NAME" \

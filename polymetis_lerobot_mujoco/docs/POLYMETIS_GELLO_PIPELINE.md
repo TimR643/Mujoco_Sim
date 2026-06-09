@@ -425,3 +425,34 @@ export PATH=/home/fer_ros2_sim/.local/bin:$PATH
 cd /home/fer_ros2_sim/gello_software
 ./start_gello_panda.sh
 ```
+
+### `source: not found` or `conda activate polymetis` inside tmux panes
+
+If `start_gello_panda.sh` creates tmux panes with `/bin/sh -c "source ...;
+conda activate polymetis; ..."`, two extra compatibility details matter:
+
+- `/bin/sh` does not have Bash's `source` builtin.
+- An executable `conda activate ...` cannot modify its parent shell, so a direct
+  micromamba subprocess prints `Shell not initialized`.
+
+Rerun the setup helper after pulling this change. It now creates:
+
+- `~/miniconda3/etc/profile.d/conda.sh`, which defines a shell-level `conda`
+  function backed by micromamba and maps the legacy env name `polymetis` to
+  `polymetis_py38`.
+- `~/.local/bin/conda`, where `conda activate`/`deactivate` are safe no-ops for
+  legacy subprocess calls.
+- `~/.local/bin/source`, a no-op compatibility command for legacy `/bin/sh` tmux
+  commands that use `source`.
+
+Use this exact sequence before rerunning the launcher:
+
+```bash
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/setup_polymetis_py38.sh
+export MAMBA_ROOT_PREFIX=/home/fer_ros2_sim/micromamba
+eval "$(/home/fer_ros2_sim/.local/bin/micromamba shell hook --shell bash)"
+micromamba activate polymetis_py38
+export PATH=/home/fer_ros2_sim/.local/bin:$PATH
+cd /home/fer_ros2_sim/gello_software
+./start_gello_panda.sh
+```
