@@ -45,11 +45,13 @@ cd /path/to/your/fer_ros2_mujoco_docker
 ```
 
 Inside the container the package is mounted at
-`/home/fer_ros2_sim/polymetis_lerobot_mujoco`. If you edited the package after
+`/home/fer_ros2_sim/polymetis_lerobot_mujoco`. The Docker image places LeRobot
+and the verification CLI entry points in an isolated Python environment at
+`/opt/fer_lerobot_venv` and adds it to `PATH`. If you edited the package after
 building the image, refresh the editable install:
 
 ```bash
-python3 -m pip install -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
+python3 -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
 ```
 
 The environment must already contain the same Polymetis and `gello_software`
@@ -129,3 +131,26 @@ Franka command interface should be Polymetis, not ROS 2 controllers. If you star
 a ROS 2 MuJoCo launch file, that can still be useful for other experiments, but
 it is not the command path used by `record_hardcoded_pick.sh` or
 `run_policy_rollout.sh`.
+
+## 10. Troubleshooting: Docker build fails while installing LeRobot
+
+If the build fails with a message like:
+
+```text
+ERROR: Cannot uninstall packaging 24.0, RECORD file not found.
+Hint: The package was installed by debian.
+```
+
+then pip tried to install LeRobot into the system Python environment and attempted
+to replace a Debian-managed Python package. The Dockerfile now avoids that class
+of failure by installing LeRobot, PyArrow, OpenCV, and the verification package
+inside `/opt/fer_lerobot_venv` instead of the system interpreter. Rebuild the
+image after pulling this change:
+
+```bash
+./.docker/build_image.sh
+```
+
+Only run `./.docker/run_container.sh` after the build completes successfully. If
+you executed both commands as two separate shell lines, the run command can still
+start an older image after a failed build.

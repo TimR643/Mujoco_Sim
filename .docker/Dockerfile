@@ -34,6 +34,7 @@ RUN apt-get update && apt-get upgrade -y \
     libeigen3-dev \
     python3-pip \
     python3-setuptools \
+    python3-venv \
     python3-wheel \
     python3-opencv \
     ros-${ROS_DISTRO}-moveit \
@@ -94,14 +95,6 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive && \
     ros-${ROS_DISTRO}-moveit-task-constructor-visualization \
     && rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install --break-system-packages --no-cache-dir \
-    "lerobot" \
-    "pyarrow" \
-    "opencv-python"
-
-COPY --chown=$USER:$USER polymetis_lerobot_mujoco /home/$USER/polymetis_lerobot_mujoco
-RUN python3 -m pip install --break-system-packages --no-cache-dir --no-deps --no-build-isolation -e /home/$USER/polymetis_lerobot_mujoco
-
 USER ${USER}
 
 ##############################################################################
@@ -129,6 +122,25 @@ RUN sudo sed --in-place --expression \
     '$isource "/home/$USER/${PROJECT_WS}/install/setup.bash"' \
     /ros_entrypoint.sh
 
+##############################################################################
+##                      Polymetis / LeRobot Verification Tools               ##
+##############################################################################
+USER root
+ENV FER_LEROBOT_VENV=/opt/fer_lerobot_venv
+RUN python3 -m venv --system-site-packages ${FER_LEROBOT_VENV} && \
+    ${FER_LEROBOT_VENV}/bin/python -m pip install --upgrade pip && \
+    ${FER_LEROBOT_VENV}/bin/python -m pip install --no-cache-dir \
+        "lerobot" \
+        "pyarrow" \
+        "opencv-python"
+
+COPY --chown=$USER:$USER polymetis_lerobot_mujoco /home/$USER/polymetis_lerobot_mujoco
+RUN ${FER_LEROBOT_VENV}/bin/python -m pip install --no-cache-dir --no-deps --no-build-isolation \
+        -e /home/$USER/polymetis_lerobot_mujoco && \
+    chown -R $USER:$USER ${FER_LEROBOT_VENV} /home/$USER/polymetis_lerobot_mujoco
+
+ENV PATH=${FER_LEROBOT_VENV}/bin:${PATH}
+USER ${USER}
 
 CMD ["/bin/bash"]
 

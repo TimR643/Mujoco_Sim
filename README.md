@@ -137,10 +137,11 @@ from the directory that contains `.docker/`.
    ./.docker/build_image.sh
    ./.docker/run_container.sh
    ```
-2. Inside the container, install/update the mounted verification package if you
-   edited it after building the image:
+2. Inside the container, the verification tools run from the isolated
+   `/opt/fer_lerobot_venv` Python environment. If you edited the mounted package
+   after building the image, refresh the editable install:
    ```bash
-   python3 -m pip install -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
+   python3 -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
    ```
 3. Start your MuJoCo Franka behind the Polymetis endpoint used by your
    `gello_software` Panda setup.
