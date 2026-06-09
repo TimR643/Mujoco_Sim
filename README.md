@@ -172,6 +172,9 @@ from the directory that contains `.docker/`.
    ```bash
    /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh
    ```
+   If the container still shows old `tmux set-environment` lines without
+   `tmux list-sessions`, leave the container and update/check the host checkout;
+   `run_container.sh` now warns when the host wrapper is missing that fix.
 6. Add `polymetis_lerobot_mujoco/mujoco/framos_d435e_wrist_camera.xml` to the
    Panda wrist/hand body in your MJCF and expose that rendered camera as an
    OpenCV-readable stream/device.

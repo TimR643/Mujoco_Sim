@@ -494,3 +494,28 @@ restore it. Rerun the setup helper and start GELLO via the compatibility wrapper
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/setup_polymetis_py38.sh
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh
 ```
+
+## 20. Troubleshooting: host says `Already up to date`, but the container still shows old wrapper lines
+
+If this command inside the container still shows direct `tmux set-environment`
+lines without an `if tmux list-sessions ...` guard, the mounted host checkout is
+still stale:
+
+```bash
+nl -ba /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh | sed -n '42,56p'
+```
+
+Leave the container and verify the file on the host, not inside Docker:
+
+```bash
+exit
+cd ~/fer_ros2_mujoco_docker
+grep -n "tmux list-sessions" polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh
+git log -1 --oneline
+```
+
+The host file must contain `tmux list-sessions`. If `git pull` says `Already up
+to date` but the grep finds nothing, your local branch/remote does not contain
+this fix yet. Apply the branch that contains this change, or update the file from
+the PR before starting the container again. The run script now prints a warning
+when the host wrapper lacks the marker, before Docker starts.

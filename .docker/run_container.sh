@@ -31,6 +31,15 @@ PACKAGE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$PACKAGE_ROOT"
 echo -e "${GREEN_BOLD}Using repository root: ${PACKAGE_ROOT}${RESET}"
 
+GELLO_COMPAT_WRAPPER="$PACKAGE_ROOT/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh"
+if [ -f "$GELLO_COMPAT_WRAPPER" ]; then
+    if ! grep -q "tmux list-sessions" "$GELLO_COMPAT_WRAPPER"; then
+        echo -e "${YELLOW_BOLD}Warning: ${GELLO_COMPAT_WRAPPER} does not contain the tmux list-sessions fix.${RESET}"
+        echo -e "${YELLOW_BOLD}Run 'git pull' on the host checkout, or do not expect the GELLO compatibility launcher to work.${RESET}"
+    fi
+    echo -e "${GREEN_BOLD}GELLO compatibility wrapper: $(grep -m1 'tmux list-sessions' "$GELLO_COMPAT_WRAPPER" || true)${RESET}"
+fi
+
 # Check if DISPLAY is set
 if [ "${DISPLAY:-}" ]; then
     xhost + local:root
