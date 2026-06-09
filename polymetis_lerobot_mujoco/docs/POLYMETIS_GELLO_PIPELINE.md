@@ -47,11 +47,13 @@ cd /path/to/your/fer_ros2_mujoco_docker
 Inside the container the package is mounted at
 `/home/fer_ros2_sim/polymetis_lerobot_mujoco`. The Docker image places LeRobot
 and the verification CLI entry points in an isolated Python environment at
-`/opt/fer_lerobot_venv` and adds it to `PATH`. If you edited the package after
-building the image, refresh the editable install:
+`/opt/fer_lerobot_venv`, but that virtualenv is intentionally **not** prepended to
+the global `PATH` so normal ROS launch helpers keep using the system ROS Python.
+If you edited the package after building the image, refresh the editable install
+explicitly in the venv:
 
 ```bash
-python3 -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
+/opt/fer_lerobot_venv/bin/python -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
 ```
 
 The container intentionally does not install Polymetis itself. Official Polymetis
@@ -585,8 +587,10 @@ do not start Polymetis. If controller spawners repeatedly print `Could not
 contact service /controller_manager/list_controllers`, do not chase a
 real-time-kernel issue first. A few 1000 Hz overrun warnings are expected on
 non-real-time Docker hosts; a missing controller-manager service means the normal
-MuJoCo launch path has not reached readiness. The Docker run script no longer forces a container-wide DDS override, so the
-original ROS/MuJoCo launch path keeps its default middleware behavior. If you
+MuJoCo launch path has not reached readiness. The Docker run script no longer
+forces a container-wide DDS override and no longer prepends
+`/opt/fer_lerobot_venv/bin` to the global `PATH`, so the original ROS/MuJoCo
+launch path keeps its default middleware and system ROS Python behavior. If you
 explicitly want to test the larger message-size DDS profile, start Terminal A
 with `MUJOCO_DDS_PROFILE=large`; the default path applies no DDS override.
 

@@ -5,6 +5,8 @@ LAUNCH_FILE=${LAUNCH_FILE:-fer_mujoco_ros2_control.launch.py}
 PACKAGE=${PACKAGE:-franka_mujoco_sim_bringup}
 MUJOCO_DDS_PROFILE=${MUJOCO_DDS_PROFILE:-default}
 MUJOCO_DESCRIPTION_WATCHDOG=${MUJOCO_DESCRIPTION_WATCHDOG:-1}
+ROS_SAFE_PATH=${ROS_SAFE_PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}
+export PATH="$ROS_SAFE_PATH"
 
 # ROS/ament setup files legitimately reference optional variables that may be
 # unset. Temporarily disable nounset while sourcing them, then restore strict mode.

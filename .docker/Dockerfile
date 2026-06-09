@@ -141,7 +141,6 @@ RUN ${FER_LEROBOT_VENV}/bin/python -m pip install --no-cache-dir --no-deps --no-
         -e /home/$USER/polymetis_lerobot_mujoco && \
     chown -R $USER:$USER ${FER_LEROBOT_VENV} /home/$USER/polymetis_lerobot_mujoco
 
-ENV PATH=${FER_LEROBOT_VENV}/bin:${PATH}
 USER ${USER}
 
 CMD ["/bin/bash"]

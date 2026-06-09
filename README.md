@@ -165,10 +165,11 @@ the Polymetis/GELLO server layer, and only then run the hardcoded recorder.
    before starting Polymetis. The repeated controller-spawner warnings are a
    symptom of this missing readiness. You do **not** need a real-time kernel to
    fix a missing controller-manager service; first restore the normal MuJoCo
-   launch path. `run_container.sh` no longer forces a container-wide DDS override, so the
-   original ROS/MuJoCo launch path keeps its default middleware behavior. If you
-   explicitly want to test the larger DDS profile, start only the MuJoCo wrapper
-   with `MUJOCO_DDS_PROFILE=large`; otherwise no DDS override is applied.
+   launch path. `run_container.sh` no longer forces a container-wide DDS override
+   **and no longer puts `/opt/fer_lerobot_venv/bin` on the global `PATH`**, so
+   normal ROS launch helpers use the system ROS Python again. If you explicitly
+   want to test the larger DDS profile, start only the MuJoCo wrapper with
+   `MUJOCO_DDS_PROFILE=large`; otherwise no DDS override is applied.
 
 3. **Container terminal C: wait for Polymetis and record**
    ```bash
@@ -192,11 +193,12 @@ from the directory that contains `.docker/`.
    ./.docker/build_image.sh
    ./.docker/run_container.sh
    ```
-2. Inside the container, the verification tools run from the isolated
-   `/opt/fer_lerobot_venv` Python environment. If you edited the mounted package
-   after building the image, refresh the editable install:
+2. Inside the container, LeRobot training tools run from the isolated
+   `/opt/fer_lerobot_venv` Python environment, which is intentionally not on the
+   global `PATH` used by normal ROS launches. If you edited the mounted package
+   after building the image, refresh the editable install explicitly in the venv:
    ```bash
-   python3 -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
+   /opt/fer_lerobot_venv/bin/python -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
    ```
 3. If `micromamba` or `tmux` is missing after restarting the `--rm`
    container, install/repair the persistent Polymetis environment once. The

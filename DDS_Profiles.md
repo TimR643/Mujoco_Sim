@@ -132,4 +132,6 @@ repository also ships `env/cyclone_dds_large_data.xml`, which raises
 `MaxMessageSize` to 20 MB and keeps shared memory disabled. It is opt-in only:
 start the helper with `MUJOCO_DDS_PROFILE=large` to use it. The Docker run script
 does not force `CYCLONEDDS_URI` container-wide, so normal launch commands keep
-their original middleware behavior unless you opt in through the helper.
+their original middleware behavior unless you opt in through the helper. It also
+keeps the LeRobot virtualenv off the global `PATH`, preventing ROS shell/Python
+helpers from accidentally running under the LeRobot Python environment.
