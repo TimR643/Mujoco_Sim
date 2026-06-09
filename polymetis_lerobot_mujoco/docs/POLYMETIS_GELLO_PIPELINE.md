@@ -32,12 +32,24 @@ and set `camera.wrist.device` in `configs/perfect_pick.yaml` accordingly.
 For a quick dry run without camera plumbing, pass `--no-camera` or set
 `CAMERA_FLAG=--no-camera` in the shell wrappers.
 
-## 3. Install the Python package
+## 3. Start the Docker environment correctly
 
-From the repository root inside your container or Python environment:
+Run Docker helper scripts from the **host checkout**. They are intentionally not
+available from inside `~/ros2_ws` in an already-running container.
 
 ```bash
-python3 -m pip install -e polymetis_lerobot_mujoco
+# Host terminal, in the directory that contains .docker/
+cd /path/to/your/fer_ros2_mujoco_docker
+./.docker/build_image.sh
+./.docker/run_container.sh
+```
+
+Inside the container the package is mounted at
+`/home/fer_ros2_sim/polymetis_lerobot_mujoco`. If you edited the package after
+building the image, refresh the editable install:
+
+```bash
+python3 -m pip install -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
 ```
 
 The environment must already contain the same Polymetis and `gello_software`
@@ -49,9 +61,8 @@ The hardcoded agent replaces only the physical GELLO device. It produces the
 same style of absolute 8-D Panda command that a GELLO agent would produce.
 
 ```bash
-CONFIG=/workspace/Mujoco_Sim/polymetis_lerobot_mujoco/configs/perfect_pick.yaml \
 CAMERA_FLAG=--no-camera \
-polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
 ```
 
 Remove `CAMERA_FLAG=--no-camera` once the MuJoCo wrist camera is available to
@@ -67,7 +78,7 @@ LeRobot version, train with the included wrapper:
 ```bash
 DATASET_REPO_ID=local/fer_mujoco_cube_pick \
 OUTPUT_DIR=/home/fer_ros2_sim/data/lerobot_outputs/act_fer_mujoco_cube_pick \
-polymetis_lerobot_mujoco/scripts/train_lerobot_act.sh
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/train_lerobot_act.sh
 ```
 
 ## 6. Execute the trained model through Polymetis
@@ -75,7 +86,7 @@ polymetis_lerobot_mujoco/scripts/train_lerobot_act.sh
 ```bash
 POLICY_PATH=/home/fer_ros2_sim/data/lerobot_outputs/act_fer_mujoco_cube_pick/checkpoints/last/pretrained_model \
 CAMERA_FLAG=--no-camera \
-polymetis_lerobot_mujoco/scripts/run_policy_rollout.sh
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/run_policy_rollout.sh
 ```
 
 Again, remove `CAMERA_FLAG=--no-camera` after the wrist camera stream is ready.
@@ -86,3 +97,35 @@ The policy rollout uses the same Polymetis command path as recording.
 Tune `trajectory.waypoints` in `configs/perfect_pick.yaml` to your cube pose.
 Keep the Polymetis endpoint, dataset metadata, and observation/action names
 stable so the verification run remains comparable to the real GELLO pipeline.
+
+## 8. Troubleshooting: `No such file or directory` for `.docker/*`
+
+If you see a prompt like this:
+
+```text
+fer_ros2_sim@tim:~/ros2_ws$
+```
+
+you are already inside the container. The Docker helper scripts live in the host
+repository checkout and are not mounted into `~/ros2_ws`. Leave the container and
+run them on the host:
+
+```bash
+exit
+cd /path/to/your/fer_ros2_mujoco_docker
+./.docker/build_image.sh
+./.docker/run_container.sh
+```
+
+The path `/workspace/Mujoco_Sim` is only an example from an automation workspace;
+use the actual directory where you cloned this repository.
+
+## 9. Troubleshooting: ROS 2 controller-manager overrun messages
+
+Messages such as `Overrun detected! The controller manager missed its desired
+rate of 1000 Hz` come from the ROS 2 `ros2_control_node`. They are not produced
+by the Polymetis/LeRobot verification recorder. For this verification path, the
+Franka command interface should be Polymetis, not ROS 2 controllers. If you start
+a ROS 2 MuJoCo launch file, that can still be useful for other experiments, but
+it is not the command path used by `record_hardcoded_pick.sh` or
+`run_policy_rollout.sh`.

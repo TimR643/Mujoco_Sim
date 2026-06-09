@@ -13,40 +13,26 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-uid=$(eval "id -u")
-gid=$(eval "id -g")
+set -euo pipefail
 
 # ANSI escape codes
-RED_BOLD="\033[1;31m"
 YELLOW_BOLD="\033[1;33m"
 GREEN_BOLD="\033[1;32m"
 RESET="\033[0m"
 
 PACKAGE_NAME="fer_ros2_mujoco_docker"
-PACKAGE_ROOT_NAME="Mujoco_Sim"
 CONTAINER_USER="fer_ros2_sim"
 
-# Set Package root
-if [[ "$(pwd)" == *"/$PACKAGE_ROOT_NAME/"* ]]; then
-    # Case A: Inside a subdirectory
-    echo -e "${YELLOW_BOLD}Inside subdirectory. Navigating to root...${RESET}"
-    # Strip everything after the package name to find the root
-    _cwd="$(pwd)"
-    PACKAGE_ROOT="${_cwd%%/$PACKAGE_ROOT_NAME/*}/$PACKAGE_ROOT_NAME"
-    cd "$PACKAGE_ROOT" || exit 1
-elif [[ "$(pwd)" == *"/$PACKAGE_ROOT_NAME" ]]; then
-    # Case B: Already at the root
-    echo -e "${GREEN_BOLD}Already at package root.${RESET}"
-    PACKAGE_ROOT="$(pwd)"
-else
-    # Case C: Not in the package at all
-    echo -e "${RED_BOLD}Error: You are not inside the directory '$PACKAGE_ROOT_NAME'.${RESET}"
-    echo "Current path: $(pwd)"
-    exit 1
-fi
+# Resolve the repository root from this script location instead of assuming a
+# fixed checkout directory name. Docker scripts must be executed from the host
+# checkout, not from inside the already-running container's ~/ros2_ws.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+cd "$PACKAGE_ROOT"
+echo -e "${GREEN_BOLD}Using repository root: ${PACKAGE_ROOT}${RESET}"
 
 # Check if DISPLAY is set
-if [ "$DISPLAY" ]; then
+if [ "${DISPLAY:-}" ]; then
     xhost + local:root
 fi
 
@@ -60,7 +46,7 @@ for FOLDER in ros2_ws/src env log data; do
 done
 
 # Create the .claude_container, so sessions with claude inside docker persist
-for FOLDER in .claude_container; do 
+for FOLDER in .claude_container; do
     HOST_PATH="$PACKAGE_ROOT/$FOLDER"
     if [ ! -d "$HOST_PATH" ]; then
         echo -e "${YELLOW_BOLD}Warning: $HOST_PATH does not exist. Creating it...${RESET}"
@@ -74,7 +60,7 @@ docker run \
     --privileged \
     --net host \
     --ipc host \
-    -e DISPLAY=$DISPLAY \
+    -e DISPLAY=${DISPLAY:-} \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v ~/.Xauthority:/home/${CONTAINER_USER}/.Xauthority \
     -v $PACKAGE_ROOT/ros2_ws:/home/${CONTAINER_USER}/ros2_ws \
@@ -84,4 +70,4 @@ docker run \
     -v $PACKAGE_ROOT/.claude_container:/home/${CONTAINER_USER}/.claude \
     --entrypoint /bin/bash \
     --rm \
-    $PACKAGE_NAME/ros:jazzy_moveit 
+    $PACKAGE_NAME/ros:jazzy_moveit

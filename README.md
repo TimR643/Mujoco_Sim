@@ -126,21 +126,33 @@ used for recording or policy rollout.
 
 ### Quick start
 
-1. Start your MuJoCo Franka behind the Polymetis endpoint used by your
+Run the Docker helper scripts from the **host checkout**, not from inside the
+container. If your prompt looks like `fer_ros2_sim@...:~/ros2_ws$`, you are
+already inside the container; type `exit` first and then run the Docker scripts
+from the directory that contains `.docker/`.
+
+1. On the host, build and enter the container from any checkout directory name:
+   ```bash
+   cd /path/to/your/fer_ros2_mujoco_docker
+   ./.docker/build_image.sh
+   ./.docker/run_container.sh
+   ```
+2. Inside the container, install/update the mounted verification package if you
+   edited it after building the image:
+   ```bash
+   python3 -m pip install -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
+   ```
+3. Start your MuJoCo Franka behind the Polymetis endpoint used by your
    `gello_software` Panda setup.
-2. Add `polymetis_lerobot_mujoco/mujoco/framos_d435e_wrist_camera.xml` to the
+4. Add `polymetis_lerobot_mujoco/mujoco/framos_d435e_wrist_camera.xml` to the
    Panda wrist/hand body in your MJCF and expose that rendered camera as an
    OpenCV-readable stream/device.
-3. Install the package:
+5. Record the hardcoded pick demonstration from inside the container:
    ```bash
-   python3 -m pip install -e polymetis_lerobot_mujoco
+   CAMERA_FLAG=--no-camera \
+   /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
    ```
-4. Record the hardcoded pick demonstration:
-   ```bash
-   CONFIG=/workspace/Mujoco_Sim/polymetis_lerobot_mujoco/configs/perfect_pick.yaml \
-   polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
-   ```
-5. Train and replay with the wrappers documented in
+6. Train and replay with the wrappers documented in
    `polymetis_lerobot_mujoco/docs/POLYMETIS_GELLO_PIPELINE.md`.
 
 Tune only the task waypoints in
