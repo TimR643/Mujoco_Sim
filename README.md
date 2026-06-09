@@ -178,6 +178,11 @@ from the directory that contains `.docker/`.
    CAMERA_FLAG=--no-camera \
    /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
    ```
+   If you previously exported `CONFIG=.` in the same shell, either run
+   `unset CONFIG` first or set
+   `CONFIG=/home/fer_ros2_sim/polymetis_lerobot_mujoco/configs/perfect_pick.yaml`;
+   the wrappers now also warn and fall back to the default YAML when `CONFIG` is
+   a directory.
 9. Train and replay with the wrappers documented in
    `polymetis_lerobot_mujoco/docs/POLYMETIS_GELLO_PIPELINE.md`.
 

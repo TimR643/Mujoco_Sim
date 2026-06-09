@@ -331,3 +331,32 @@ command -v conda
 conda list polymetis
 python -c "from polymetis import RobotInterface, GripperInterface; print('real polymetis ok')"
 ```
+
+## 17. Troubleshooting: `IsADirectoryError: ... '.'` while loading the config
+
+The recorder expects `--config` to point to the YAML file
+`/home/fer_ros2_sim/polymetis_lerobot_mujoco/configs/perfect_pick.yaml`. If your
+shell contains an old `CONFIG=.` export, Python receives the current directory
+instead of that YAML file and older wrappers failed with:
+
+```text
+IsADirectoryError: [Errno 21] Is a directory: '.'
+```
+
+The wrappers now validate `CONFIG` before Python starts. If `CONFIG` points to a
+directory, they print a warning and fall back to the package default config. You
+can also clean your shell explicitly:
+
+```bash
+unset CONFIG
+CAMERA_FLAG=--no-camera \
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
+```
+
+Or pass the config file explicitly:
+
+```bash
+CONFIG=/home/fer_ros2_sim/polymetis_lerobot_mujoco/configs/perfect_pick.yaml \
+CAMERA_FLAG=--no-camera \
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
+```

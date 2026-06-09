@@ -6,7 +6,17 @@ PACKAGE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 export PYTHONPATH="${PACKAGE_ROOT}:${PYTHONPATH:-}"
 PYTHON_BIN=${PYTHON_BIN:-python}
 
-CONFIG=${CONFIG:-$(${PYTHON_BIN} -m polymetis_lerobot_mujoco.print_config)}
+DEFAULT_CONFIG="${PACKAGE_ROOT}/configs/perfect_pick.yaml"
+CONFIG=${CONFIG:-${DEFAULT_CONFIG}}
+if [ -d "${CONFIG}" ]; then
+  echo "Warning: CONFIG='${CONFIG}' is a directory; using default '${DEFAULT_CONFIG}' instead." >&2
+  CONFIG="${DEFAULT_CONFIG}"
+fi
+if [ ! -f "${CONFIG}" ]; then
+  echo "Error: CONFIG='${CONFIG}' is not a file. Set CONFIG to a YAML file such as '${DEFAULT_CONFIG}'." >&2
+  exit 2
+fi
+
 POLICY_PATH=${POLICY_PATH:?Set POLICY_PATH to a LeRobot checkpoint or Hub ID.}
 SECONDS=${SECONDS:-20}
 DEVICE=${POLICY_DEVICE:-cuda}
