@@ -166,7 +166,8 @@ from the directory that contains `.docker/`.
 5. Start your MuJoCo Franka behind the Polymetis endpoint used by your
    `gello_software` Panda setup. For the legacy tmux launcher, use the
    compatibility wrapper so the activated micromamba environment, `conda.sh`
-   shim, `source` shim, and tmux server environment are all consistent:
+   shim, `source` shim, tmux server environment, and Conda hook edge cases such
+   as `libxml2_deactivate.sh` under `set -u` are all handled consistently:
    ```bash
    /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh
    ```

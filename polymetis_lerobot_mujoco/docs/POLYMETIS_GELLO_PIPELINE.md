@@ -457,3 +457,23 @@ If your GELLO checkout or launcher has a different path, override it explicitly:
 ```bash
 GELLO_ROOT=/home/fer_ros2_sim/gello_software START_SCRIPT=/home/fer_ros2_sim/gello_software/start_gello_panda.sh /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh
 ```
+
+### `libxml2_deactivate.sh: ... unbound variable` during `micromamba activate`
+
+Some packages installed by the Polymetis Conda stack provide activation or
+deactivation hooks that read variables which are not always set. If a wrapper is
+running with Bash `set -u`, activating an environment that is already active can
+fail with a message like:
+
+```text
+.../etc/conda/deactivate.d/libxml2_deactivate.sh: line 3: xml_catalog_files_libxml2: unbound variable
+```
+
+The compatibility setup and launcher now temporarily disable `nounset` only
+around micromamba hook evaluation and environment activation/deactivation, then
+restore it. Rerun the setup helper and start GELLO via the compatibility wrapper:
+
+```bash
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/setup_polymetis_py38.sh
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh
+```

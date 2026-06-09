@@ -77,6 +77,10 @@ cat > "$MINICONDA_PROFILE" <<PROFILE
 #!/usr/bin/env sh
 export MAMBA_ROOT_PREFIX="\${MAMBA_ROOT_PREFIX:-$HOME/micromamba}"
 export PATH="$HOME/.local/bin:\$PATH"
+_fer_restore_nounset=
+case \$- in
+  *u*) _fer_restore_nounset=1; set +u ;;
+esac
 if [ -x "$MICROMAMBA" ]; then
   if [ -n "\${BASH_VERSION:-}" ]; then
     eval "\$("$MICROMAMBA" shell hook --shell bash)"
@@ -84,6 +88,10 @@ if [ -x "$MICROMAMBA" ]; then
     eval "\$("$MICROMAMBA" shell hook --shell sh)"
   fi
 fi
+if [ -n "\${_fer_restore_nounset:-}" ]; then
+  set -u
+fi
+unset _fer_restore_nounset
 conda() {
   if [ "\${1:-}" = "activate" ]; then
     shift
@@ -91,9 +99,29 @@ conda() {
     if [ "\$env_name" = "polymetis" ]; then
       env_name="$ENV_NAME"
     fi
+    _fer_restore_nounset=
+    case \$- in
+      *u*) _fer_restore_nounset=1; set +u ;;
+    esac
     micromamba activate "\$env_name"
+    _fer_status=\$?
+    if [ -n "\${_fer_restore_nounset:-}" ]; then
+      set -u
+    fi
+    unset _fer_restore_nounset
+    return \$_fer_status
   elif [ "\${1:-}" = "deactivate" ]; then
+    _fer_restore_nounset=
+    case \$- in
+      *u*) _fer_restore_nounset=1; set +u ;;
+    esac
     micromamba deactivate
+    _fer_status=\$?
+    if [ -n "\${_fer_restore_nounset:-}" ]; then
+      set -u
+    fi
+    unset _fer_restore_nounset
+    return \$_fer_status
   else
     micromamba "\$@"
   fi
@@ -122,8 +150,10 @@ Polymetis environment is ready.
 Activate it in an interactive shell with:
 
   export MAMBA_ROOT_PREFIX=${MAMBA_ROOT_PREFIX}
+  set +u
   eval "\$(${MICROMAMBA} shell hook --shell bash)"
   micromamba activate ${ENV_NAME}
+  set -u
   export PATH=${HOME}/.local/bin:\$PATH
   which python
   command -v conda

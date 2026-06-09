@@ -16,8 +16,13 @@ if [ ! -x "$MICROMAMBA_BIN" ] || [ ! -f "$HOME/miniconda3/etc/profile.d/conda.sh
 fi
 
 export PATH="$HOME/.local/bin:$PATH"
+# Conda/micromamba activation hooks can read unset variables in package
+# deactivate.d scripts (for example libxml2). Temporarily disable nounset while
+# activating so this wrapper can also be called from an already-active env.
+set +u
 eval "$($MICROMAMBA_BIN shell hook --shell bash)"
 micromamba activate "$ENV_NAME"
+set -u
 export PATH="$HOME/.local/bin:$PATH"
 
 python -c "from polymetis import RobotInterface, GripperInterface; print('real polymetis ok')"
