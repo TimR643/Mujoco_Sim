@@ -147,7 +147,11 @@ the Polymetis/GELLO server layer, and only then run the hardcoded recorder.
    The default launch file is now the lighter `fer_mujoco_ros2_control.launch.py`
    because this is the stable base environment for attaching Polymetis. Override
    with `LAUNCH_FILE=fer_mujoco_moveit.launch.py` only if you explicitly need
-   MoveIt/RViz during this step.
+   MoveIt/RViz during this step. The wrapper also starts a short-lived
+   `/mujoco_robot_description` republisher watchdog before `ros2 launch`; this
+   handles the launch-order race where `mujoco_ros2_control_node` misses the
+   one-shot MJCF description publication and then all controller spawners time
+   out on `/controller_manager/list_controllers`.
 
 2. **Container terminal B: verify MuJoCo/ros2_control readiness, then attach/start Polymetis**
    ```bash
@@ -161,11 +165,10 @@ the Polymetis/GELLO server layer, and only then run the hardcoded recorder.
    before starting Polymetis. The repeated controller-spawner warnings are a
    symptom of this missing readiness. You do **not** need a real-time kernel to
    fix a missing controller-manager service; first restore the normal MuJoCo
-   launch path. `run_container.sh` now pins the mounted **base** DDS profile
-   (`/home/fer_ros2_sim/env/cyclone_dds.xml`) so even an older rebuilt image uses
-   the normal launch-compatible settings. If you explicitly want to test the
-   larger DDS profile, start the wrapper with `MUJOCO_DDS_PROFILE=large`;
-   otherwise the default launch path stays on the base profile.
+   launch path. `run_container.sh` no longer forces a container-wide DDS override, so the
+   original ROS/MuJoCo launch path keeps its default middleware behavior. If you
+   explicitly want to test the larger DDS profile, start only the MuJoCo wrapper
+   with `MUJOCO_DDS_PROFILE=large`; otherwise no DDS override is applied.
 
 3. **Container terminal C: wait for Polymetis and record**
    ```bash

@@ -555,7 +555,13 @@ three terminals attached to the same Docker container.
 
 By default this launches `franka_mujoco_sim_bringup` with the lighter
 `fer_mujoco_ros2_control.launch.py`. Use this as the stable base environment
-before attaching Polymetis. To launch the MoveIt/RViz setup instead:
+before attaching Polymetis. The wrapper starts a `/mujoco_robot_description`
+republisher watchdog before the launch so the ros2_control node can still obtain
+the MJCF description if it misses the converter's one-shot publication. This
+addresses the failure pattern where every controller spawner times out on
+`/controller_manager/list_controllers` and the MuJoCo node later reports a
+`Timeout waiting for /mujoco_robot_description topic`. To launch the MoveIt/RViz
+setup instead:
 
 ```bash
 LAUNCH_FILE=fer_mujoco_moveit.launch.py \
@@ -579,12 +585,10 @@ do not start Polymetis. If controller spawners repeatedly print `Could not
 contact service /controller_manager/list_controllers`, do not chase a
 real-time-kernel issue first. A few 1000 Hz overrun warnings are expected on
 non-real-time Docker hosts; a missing controller-manager service means the normal
-MuJoCo launch path has not reached readiness. The Docker run script now pins the mounted base DDS profile
-`/home/fer_ros2_sim/env/cyclone_dds.xml`, whose values match the base repository
-launch-compatible profile, so older rebuilt images do not keep an experimental
-profile. If you explicitly want to test the larger message-size DDS profile,
-start Terminal A with `MUJOCO_DDS_PROFILE=large`; the default path remains on the
-base profile.
+MuJoCo launch path has not reached readiness. The Docker run script no longer forces a container-wide DDS override, so the
+original ROS/MuJoCo launch path keeps its default middleware behavior. If you
+explicitly want to test the larger message-size DDS profile, start Terminal A
+with `MUJOCO_DDS_PROFILE=large`; the default path applies no DDS override.
 
 ### Terminal C: wait for Polymetis and record
 

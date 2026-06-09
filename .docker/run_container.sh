@@ -76,7 +76,6 @@ docker run \
     --ipc host \
     -e DISPLAY=${DISPLAY:-} \
     -e MAMBA_ROOT_PREFIX=/home/${CONTAINER_USER}/micromamba \
-    -e CYCLONEDDS_URI=file:///home/${CONTAINER_USER}/env/cyclone_dds.xml \
     -e PATH=/home/${CONTAINER_USER}/.local/bin:/opt/fer_lerobot_venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v ~/.Xauthority:/home/${CONTAINER_USER}/.Xauthority \
