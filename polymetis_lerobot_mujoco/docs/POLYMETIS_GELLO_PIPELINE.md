@@ -410,22 +410,20 @@ that delegate to micromamba:
 ```
 
 If you are using an already-running container that was built before `tmux` was
-added to the image, install it once inside that container or rebuild the image:
+added to the image, rerun the setup helper. It now installs missing `tmux` and
+`bzip2` packages through `sudo apt-get` before checking Polymetis, so the fix also
+works without rebuilding the image:
 
 ```bash
-sudo apt-get update
-sudo apt-get install -y tmux
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/setup_polymetis_py38.sh
 ```
 
-Then activate Polymetis again and rerun the GELLO launcher:
+Then prefer the compatibility launcher instead of calling the legacy script
+manually. It activates `polymetis_py38`, verifies the Polymetis import, updates a
+running tmux server's environment, and finally executes `start_gello_panda.sh`:
 
 ```bash
-export MAMBA_ROOT_PREFIX=/home/fer_ros2_sim/micromamba
-eval "$(/home/fer_ros2_sim/.local/bin/micromamba shell hook --shell bash)"
-micromamba activate polymetis_py38
-export PATH=/home/fer_ros2_sim/.local/bin:$PATH
-cd /home/fer_ros2_sim/gello_software
-./start_gello_panda.sh
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh
 ```
 
 ### `source: not found` or `conda activate polymetis` inside tmux panes
@@ -451,10 +449,11 @@ Use this exact sequence before rerunning the launcher:
 
 ```bash
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/setup_polymetis_py38.sh
-export MAMBA_ROOT_PREFIX=/home/fer_ros2_sim/micromamba
-eval "$(/home/fer_ros2_sim/.local/bin/micromamba shell hook --shell bash)"
-micromamba activate polymetis_py38
-export PATH=/home/fer_ros2_sim/.local/bin:$PATH
-cd /home/fer_ros2_sim/gello_software
-./start_gello_panda.sh
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh
+```
+
+If your GELLO checkout or launcher has a different path, override it explicitly:
+
+```bash
+GELLO_ROOT=/home/fer_ros2_sim/gello_software START_SCRIPT=/home/fer_ros2_sim/gello_software/start_gello_panda.sh /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh
 ```

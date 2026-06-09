@@ -143,12 +143,14 @@ from the directory that contains `.docker/`.
    ```bash
    python3 -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
    ```
-3. If `micromamba` is missing after restarting the `--rm` container, install the
-   persistent Polymetis environment once. The helper stores micromamba, the
-   Miniconda-compatible shim folder, and the env in host-mounted folders so they
-   survive container restarts, and it also creates a Miniconda-compatible
-   `~/miniconda3/etc/profile.d/conda.sh` shim for legacy `gello_software`
-   scripts that source that path:
+3. If `micromamba` or `tmux` is missing after restarting the `--rm`
+   container, install/repair the persistent Polymetis environment once. The
+   helper stores micromamba, the Miniconda-compatible shim folder, and the env in
+   host-mounted folders so they survive container restarts. It also installs
+   missing `tmux`/`bzip2` packages in already-running old containers, creates a
+   Miniconda-compatible `~/miniconda3/etc/profile.d/conda.sh` shim, and adds
+   `conda`/`source` compatibility commands for legacy `gello_software` tmux
+   panes:
    ```bash
    /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/setup_polymetis_py38.sh
    ```
@@ -162,7 +164,12 @@ from the directory that contains `.docker/`.
    python -c "from polymetis import RobotInterface, GripperInterface; print('real polymetis ok')"
    ```
 5. Start your MuJoCo Franka behind the Polymetis endpoint used by your
-   `gello_software` Panda setup.
+   `gello_software` Panda setup. For the legacy tmux launcher, use the
+   compatibility wrapper so the activated micromamba environment, `conda.sh`
+   shim, `source` shim, and tmux server environment are all consistent:
+   ```bash
+   /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh
+   ```
 6. Add `polymetis_lerobot_mujoco/mujoco/framos_d435e_wrist_camera.xml` to the
    Panda wrist/hand body in your MJCF and expose that rendered camera as an
    OpenCV-readable stream/device.
