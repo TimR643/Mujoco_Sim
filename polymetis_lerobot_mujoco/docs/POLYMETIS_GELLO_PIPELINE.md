@@ -360,3 +360,37 @@ CONFIG=/home/fer_ros2_sim/polymetis_lerobot_mujoco/configs/perfect_pick.yaml \
 CAMERA_FLAG=--no-camera \
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
 ```
+
+## 18. Troubleshooting: `grpc._channel._InactiveRpcError` / `failed to connect to all addresses`
+
+This is the next expected error once the Python environment and YAML config are
+correct: Polymetis is installed, but there is no Polymetis robot server reachable
+at the configured address. The default config points both the arm and gripper to
+`127.0.0.1`, so the MuJoCo-backed Polymetis endpoint must already be running in
+another terminal in the same container/network namespace before the recorder can
+connect.
+
+Use this order:
+
+1. Terminal A: activate the same `polymetis_py38` environment and start your
+   MuJoCo/Polymetis server exactly as you start it for the `gello_software`
+   Panda path.
+2. Terminal B: activate `polymetis_py38`, then run the recorder:
+
+   ```bash
+   unset CONFIG
+   CAMERA_FLAG=--no-camera \
+   /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
+   ```
+
+3. If the server is not listening on localhost, edit
+   `polymetis_lerobot_mujoco/configs/perfect_pick.yaml` and set
+   `polymetis.robot_ip` and `polymetis.gripper_ip` to the reachable host/IP.
+
+To verify only the LeRobot writer and hardcoded trajectory without any Polymetis
+server, keep using the mock backend:
+
+```bash
+ROBOT_BACKEND=mock CAMERA_FLAG=--no-camera \
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
+```

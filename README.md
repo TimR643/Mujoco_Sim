@@ -182,7 +182,11 @@ from the directory that contains `.docker/`.
    `unset CONFIG` first or set
    `CONFIG=/home/fer_ros2_sim/polymetis_lerobot_mujoco/configs/perfect_pick.yaml`;
    the wrappers now also warn and fall back to the default YAML when `CONFIG` is
-   a directory.
+   a directory. If the next error is `grpc._channel._InactiveRpcError` with
+   `failed to connect to all addresses`, the Python side is ready but the
+   MuJoCo/Polymetis robot server is not reachable yet; start that endpoint in a
+   second terminal or update `polymetis.robot_ip` / `polymetis.gripper_ip` in the
+   YAML config.
 9. Train and replay with the wrappers documented in
    `polymetis_lerobot_mujoco/docs/POLYMETIS_GELLO_PIPELINE.md`.
 

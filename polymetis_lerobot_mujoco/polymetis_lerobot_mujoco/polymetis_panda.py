@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import importlib
+import importlib.util
 import time
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, TypeVar
 
 import numpy as np
 import torch
 
 MAX_OPEN_WIDTH_M = 0.09
+InterfaceT = TypeVar("InterfaceT")
 
 
 @dataclass(frozen=True)
@@ -28,9 +31,7 @@ class PolymetisPandaRobot:
     """
 
     def __init__(self, config: PolymetisPandaConfig) -> None:
-        try:
-            from polymetis import GripperInterface, RobotInterface
-        except ModuleNotFoundError as exc:
+        if importlib.util.find_spec("polymetis") is None:
             raise ModuleNotFoundError(
                 "The 'polymetis' Python module is not installed in this environment. "
                 "Polymetis is distributed through the FAIR robotics conda/source workflow, "
@@ -38,11 +39,18 @@ class PolymetisPandaRobot:
                 "gello_software Polymetis environment before using ROBOT_BACKEND=polymetis. "
                 "For a no-robot smoke test, run the recorder with ROBOT_BACKEND=mock "
                 "and CAMERA_FLAG=--no-camera."
-            ) from exc
+            )
+        polymetis = importlib.import_module("polymetis")
+        GripperInterface = polymetis.GripperInterface
+        RobotInterface = polymetis.RobotInterface
 
         self.config = config
-        self.robot = RobotInterface(ip_address=config.robot_ip)
-        self.gripper = GripperInterface(ip_address=config.gripper_ip)
+        print(
+            "Connecting to Polymetis robot "
+            f"at robot_ip={config.robot_ip!r}, gripper_ip={config.gripper_ip!r}."
+        )
+        self.robot = _connect_interface(RobotInterface, interface_name="robot", ip_address=config.robot_ip)
+        self.gripper = _connect_interface(GripperInterface, interface_name="gripper", ip_address=config.gripper_ip)
         if config.go_home_on_connect:
             self.robot.go_home()
         if config.start_joint_impedance:
@@ -78,3 +86,24 @@ class PolymetisPandaRobot:
             "ee_pos_quat": np.zeros(7, dtype=np.float32),
             "gripper_position": np.asarray([joints[-1]], dtype=np.float32),
         }
+
+
+def _connect_interface(interface_cls: type[InterfaceT], *, interface_name: str, ip_address: str) -> InterfaceT:
+    try:
+        return interface_cls(ip_address=ip_address)
+    except Exception as exc:
+        if _looks_like_grpc_unavailable(exc):
+            raise ConnectionError(
+                "Polymetis Python is installed, but the "
+                f"{interface_name} endpoint at {ip_address!r} is not reachable. "
+                "Start the MuJoCo/Polymetis server in another terminal first, or set "
+                "polymetis.robot_ip / polymetis.gripper_ip in configs/perfect_pick.yaml "
+                "to the host/IP where your gello_software Polymetis endpoint is listening. "
+                "For a no-server smoke test, run with ROBOT_BACKEND=mock CAMERA_FLAG=--no-camera."
+            ) from exc
+        raise
+
+
+def _looks_like_grpc_unavailable(exc: Exception) -> bool:
+    details = f"{exc.__class__.__module__}.{exc.__class__.__name__}: {exc}"
+    return "StatusCode.UNAVAILABLE" in details or "failed to connect to all addresses" in details
