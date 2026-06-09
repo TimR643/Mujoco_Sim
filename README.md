@@ -154,7 +154,9 @@ from the directory that contains `.docker/`.
    /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
    ```
 6. After installing/activating your real `gello_software` Polymetis environment
-   and starting the Polymetis MuJoCo endpoint, record the real hardcoded pick:
+   and starting the Polymetis MuJoCo endpoint, record the real hardcoded pick.
+   The detailed conda/mamba setup is documented in
+   `polymetis_lerobot_mujoco/docs/POLYMETIS_GELLO_PIPELINE.md`.
    ```bash
    CAMERA_FLAG=--no-camera \
    /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh

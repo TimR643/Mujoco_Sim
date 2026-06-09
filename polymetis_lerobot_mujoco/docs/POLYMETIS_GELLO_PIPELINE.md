@@ -185,3 +185,53 @@ ROBOT_BACKEND=mock CAMERA_FLAG=--no-camera \
 That mock command should produce a dataset episode without commanding MuJoCo.
 After Polymetis is installed and your MuJoCo Polymetis endpoint is running, omit
 `ROBOT_BACKEND=mock` so the default `robot_backend: polymetis` is used.
+
+## 13. Make a real Polymetis environment available
+
+The verification Docker image provides the LeRobot tools in
+`/opt/fer_lerobot_venv`, but it intentionally does not install the real Polymetis
+client. For real MuJoCo/Franka control, run the recorder from the same conda or
+mamba environment that your `gello_software` Panda setup uses.
+
+### Option A: reuse an existing `gello_software` Polymetis environment
+
+Inside the container or on the host where the Polymetis MuJoCo endpoint is
+reachable:
+
+```bash
+conda activate <your-gello-polymetis-env>
+python -c "import polymetis; print(polymetis.__file__)"
+python -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
+CAMERA_FLAG=--no-camera \
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
+```
+
+Use `--no-deps` so pip does not try to replace the carefully pinned Polymetis
+conda packages.
+
+### Option B: create a fresh Polymetis conda environment
+
+The official Polymetis installation recommends a conda environment with
+`python=3.8` and installing from the `pytorch`, `fair-robotics`, `aihabitat`, and
+`conda-forge` channels. Use `mamba` if available; otherwise replace `mamba` with
+`conda`.
+
+```bash
+mamba create -n polymetis python=3.8
+mamba activate polymetis
+mamba install -c pytorch -c fair-robotics -c aihabitat -c conda-forge polymetis
+python -c "from polymetis import RobotInterface, GripperInterface; print('polymetis ok')"
+python -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
+CAMERA_FLAG=--no-camera \
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
+```
+
+If you do not have the repository mounted at `/home/fer_ros2_sim`, substitute the
+actual path to `polymetis_lerobot_mujoco`.
+
+### Important: training and recording can use different Python environments
+
+Recording through Polymetis can run in the Polymetis conda environment and write
+data to `/home/fer_ros2_sim/data/lerobot_mujoco_cube_pick`. Training can then run
+from `/opt/fer_lerobot_venv` with `train_lerobot_act.sh`. This avoids forcing
+newer LeRobot dependencies into the older Polymetis Python environment.

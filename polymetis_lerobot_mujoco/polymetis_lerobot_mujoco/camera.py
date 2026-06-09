@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import cv2
 import numpy as np
 
 
@@ -16,7 +15,10 @@ class OpenCVCameraConfig:
 
 class OpenCVCamera:
     def __init__(self, config: OpenCVCameraConfig) -> None:
+        import cv2
+
         self.config = config
+        self._cv2 = cv2
         self.capture = cv2.VideoCapture(config.device)
         if not self.capture.isOpened():
             raise RuntimeError(f"Could not open wrist camera device {config.device!r}.")
@@ -28,7 +30,7 @@ class OpenCVCamera:
         ok, frame_bgr = self.capture.read()
         if not ok:
             raise RuntimeError("Failed to read wrist camera frame.")
-        return cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+        return self._cv2.cvtColor(frame_bgr, self._cv2.COLOR_BGR2RGB)
 
     def close(self) -> None:
         self.capture.release()
