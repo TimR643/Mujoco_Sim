@@ -144,10 +144,11 @@ from the directory that contains `.docker/`.
    python3 -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
    ```
 3. If `micromamba` is missing after restarting the `--rm` container, install the
-   persistent Polymetis environment once. The helper stores micromamba and the
-   env in host-mounted folders so they survive container restarts, and it also
-   creates a Miniconda-compatible `~/miniconda3/etc/profile.d/conda.sh` shim for
-   legacy `gello_software` scripts that source that path:
+   persistent Polymetis environment once. The helper stores micromamba, the
+   Miniconda-compatible shim folder, and the env in host-mounted folders so they
+   survive container restarts, and it also creates a Miniconda-compatible
+   `~/miniconda3/etc/profile.d/conda.sh` shim for legacy `gello_software`
+   scripts that source that path:
    ```bash
    /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/setup_polymetis_py38.sh
    ```

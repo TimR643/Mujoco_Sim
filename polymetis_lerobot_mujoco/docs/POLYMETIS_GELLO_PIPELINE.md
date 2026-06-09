@@ -399,9 +399,11 @@ ROBOT_BACKEND=mock CAMERA_FLAG=--no-camera \
 
 Some `gello_software` launch scripts are written for a workstation Miniconda
 installation and source `/home/fer_ros2_sim/miniconda3/etc/profile.d/conda.sh`.
-This Docker image uses persistent `micromamba` instead. Rerun the setup helper
-after pulling this change; it creates a Miniconda-compatible profile shim and a
-`conda` command shim that delegate to micromamba:
+This Docker image uses persistent `micromamba` instead. The run script now mounts
+`~/miniconda3` from a persistent host folder, so the compatibility profile also
+survives `--rm` container restarts. Rerun the setup helper after pulling this
+change; it creates a Miniconda-compatible profile shim and a `conda` command shim
+that delegate to micromamba:
 
 ```bash
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/setup_polymetis_py38.sh

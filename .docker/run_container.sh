@@ -46,7 +46,7 @@ for FOLDER in ros2_ws/src env log data; do
 done
 
 # Create the .claude_container, so sessions with claude inside docker persist
-for FOLDER in .claude_container .micromamba_container .local_container gello_software; do
+for FOLDER in .claude_container .micromamba_container .local_container .miniconda3_container gello_software; do
     HOST_PATH="$PACKAGE_ROOT/$FOLDER"
     if [ ! -d "$HOST_PATH" ]; then
         echo -e "${YELLOW_BOLD}Warning: $HOST_PATH does not exist. Creating it...${RESET}"
@@ -72,6 +72,7 @@ docker run \
     -v $PACKAGE_ROOT/gello_software:/home/${CONTAINER_USER}/gello_software \
     -v $PACKAGE_ROOT/.micromamba_container:/home/${CONTAINER_USER}/micromamba \
     -v $PACKAGE_ROOT/.local_container:/home/${CONTAINER_USER}/.local \
+    -v $PACKAGE_ROOT/.miniconda3_container:/home/${CONTAINER_USER}/miniconda3 \
     -v $PACKAGE_ROOT/.claude_container:/home/${CONTAINER_USER}/.claude \
     --entrypoint /bin/bash \
     --rm \
