@@ -28,7 +28,17 @@ class PolymetisPandaRobot:
     """
 
     def __init__(self, config: PolymetisPandaConfig) -> None:
-        from polymetis import GripperInterface, RobotInterface
+        try:
+            from polymetis import GripperInterface, RobotInterface
+        except ModuleNotFoundError as exc:
+            raise ModuleNotFoundError(
+                "The 'polymetis' Python module is not installed in this environment. "
+                "Polymetis is distributed through the FAIR robotics conda/source workflow, "
+                "not as a normal dependency of this package. Install/activate your "
+                "gello_software Polymetis environment before using ROBOT_BACKEND=polymetis. "
+                "For a no-robot smoke test, run the recorder with ROBOT_BACKEND=mock "
+                "and CAMERA_FLAG=--no-camera."
+            ) from exc
 
         self.config = config
         self.robot = RobotInterface(ip_address=config.robot_ip)

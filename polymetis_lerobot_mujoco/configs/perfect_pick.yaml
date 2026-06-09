@@ -2,6 +2,8 @@
 # No ROS 2 controllers are used by the recorder or policy rollout. The only
 # robot command path is the Polymetis RobotInterface/GripperInterface path used
 # by gello_software for the Panda.
+robot_backend: polymetis
+
 polymetis:
   robot_ip: 127.0.0.1
   gripper_ip: 127.0.0.1

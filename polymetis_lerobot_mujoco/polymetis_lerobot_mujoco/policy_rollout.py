@@ -11,6 +11,7 @@ import torch
 
 from polymetis_lerobot_mujoco.camera import OpenCVCamera, OpenCVCameraConfig
 from polymetis_lerobot_mujoco.config import default_config_path, load_config
+from polymetis_lerobot_mujoco.mock_panda import MockPandaConfig, MockPandaRobot
 from polymetis_lerobot_mujoco.polymetis_panda import PolymetisPandaConfig, PolymetisPandaRobot
 
 
@@ -21,18 +22,16 @@ def main() -> None:
     parser.add_argument("--seconds", type=float, default=20.0)
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--no-camera", action="store_true")
+    parser.add_argument(
+        "--robot-backend",
+        choices=("polymetis", "mock"),
+        default=None,
+        help="Robot backend to use. Defaults to config robot_backend, then polymetis.",
+    )
     args = parser.parse_args()
 
     config = load_config(args.config)
-    robot = PolymetisPandaRobot(
-        PolymetisPandaConfig(
-            robot_ip=str(config["polymetis"]["robot_ip"]),
-            gripper_ip=str(config["polymetis"]["gripper_ip"]),
-            max_open_width_m=float(config["robot"]["max_open_width_m"]),
-            go_home_on_connect=bool(config["polymetis"]["go_home_on_connect"]),
-            start_joint_impedance=bool(config["polymetis"]["start_joint_impedance"]),
-        )
-    )
+    robot = _make_robot(config, args.robot_backend)
     camera = None if args.no_camera else _make_camera(config)
     policy = _load_policy(args.policy_path, args.device)
     fps = int(config["lerobot"]["fps"])
@@ -56,6 +55,24 @@ def main() -> None:
 
     if camera is not None:
         camera.close()
+
+
+def _make_robot(config: dict, backend_override: str | None):
+    backend = backend_override or str(config.get("robot_backend", "polymetis"))
+    if backend == "mock":
+        print("Using mock Panda backend. This verifies the policy loop but does not control MuJoCo.")
+        return MockPandaRobot(MockPandaConfig(home=tuple(float(value) for value in config["robot"]["home"])))
+    if backend == "polymetis":
+        return PolymetisPandaRobot(
+            PolymetisPandaConfig(
+                robot_ip=str(config["polymetis"]["robot_ip"]),
+                gripper_ip=str(config["polymetis"]["gripper_ip"]),
+                max_open_width_m=float(config["robot"]["max_open_width_m"]),
+                go_home_on_connect=bool(config["polymetis"]["go_home_on_connect"]),
+                start_joint_impedance=bool(config["polymetis"]["start_joint_impedance"]),
+            )
+        )
+    raise ValueError(f"Unsupported robot backend: {backend!r}")
 
 
 def _make_camera(config: dict) -> OpenCVCamera:

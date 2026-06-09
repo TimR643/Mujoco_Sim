@@ -10,6 +10,7 @@ import numpy as np
 from polymetis_lerobot_mujoco.camera import OpenCVCamera, OpenCVCameraConfig
 from polymetis_lerobot_mujoco.config import default_config_path, load_config
 from polymetis_lerobot_mujoco.dataset_writer import DatasetMetadata, LocalLeRobotEpisodeWriter
+from polymetis_lerobot_mujoco.mock_panda import MockPandaConfig, MockPandaRobot
 from polymetis_lerobot_mujoco.polymetis_panda import PolymetisPandaConfig, PolymetisPandaRobot
 from polymetis_lerobot_mujoco.trajectory import HardcodedPickAgent
 
@@ -19,10 +20,17 @@ def main() -> None:
     parser.add_argument("--config", type=Path, default=default_config_path())
     parser.add_argument("--episode-index", type=int, default=None)
     parser.add_argument("--no-camera", action="store_true", help="Record only state/action if the MuJoCo wrist stream is not exposed yet.")
+    parser.add_argument(
+        "--robot-backend",
+        choices=("polymetis", "mock"),
+        default=None,
+        help="Robot backend to use. Defaults to config robot_backend, then polymetis.",
+    )
     args = parser.parse_args()
 
     config = load_config(args.config)
-    robot = _make_robot(config)
+    backend = args.robot_backend or str(config.get("robot_backend", "polymetis"))
+    robot = _make_robot(config, backend)
     camera = None if args.no_camera else _make_camera(config)
     agent = HardcodedPickAgent.from_config(config)
     lerobot_cfg = config["lerobot"]
@@ -30,7 +38,7 @@ def main() -> None:
     period_s = 1.0 / fps
     max_delta = float(config["polymetis"]["max_joint_delta_per_step"])
 
-    print(f"Warmup for {lerobot_cfg['warmup_seconds']}s with Polymetis robot interface.")
+    print(f"Warmup for {lerobot_cfg['warmup_seconds']}s with {backend} robot interface.")
     _sleep_with_rate(float(lerobot_cfg["warmup_seconds"]))
     agent.reset()
     frames: list[dict] = []
@@ -72,7 +80,7 @@ def main() -> None:
     episode_index = int(lerobot_cfg["episode_index"] if args.episode_index is None else args.episode_index)
     episode_path = writer.write_episode(episode_index, frames)
     manifest = {
-        "control_backend": "polymetis",
+        "control_backend": backend,
         "gello_equivalent_agent": "hardcoded_pick",
         "config": config,
         "episode": str(episode_path),
@@ -84,16 +92,21 @@ def main() -> None:
     print(f"Wrote Polymetis/GELLO-compatible episode to {episode_path}")
 
 
-def _make_robot(config: dict) -> PolymetisPandaRobot:
-    return PolymetisPandaRobot(
-        PolymetisPandaConfig(
-            robot_ip=str(config["polymetis"]["robot_ip"]),
-            gripper_ip=str(config["polymetis"]["gripper_ip"]),
-            max_open_width_m=float(config["robot"]["max_open_width_m"]),
-            go_home_on_connect=bool(config["polymetis"]["go_home_on_connect"]),
-            start_joint_impedance=bool(config["polymetis"]["start_joint_impedance"]),
+def _make_robot(config: dict, backend: str):
+    if backend == "mock":
+        print("Using mock Panda backend. This verifies the recorder/dataset path but does not control MuJoCo.")
+        return MockPandaRobot(MockPandaConfig(home=tuple(float(value) for value in config["robot"]["home"])))
+    if backend == "polymetis":
+        return PolymetisPandaRobot(
+            PolymetisPandaConfig(
+                robot_ip=str(config["polymetis"]["robot_ip"]),
+                gripper_ip=str(config["polymetis"]["gripper_ip"]),
+                max_open_width_m=float(config["robot"]["max_open_width_m"]),
+                go_home_on_connect=bool(config["polymetis"]["go_home_on_connect"]),
+                start_joint_impedance=bool(config["polymetis"]["start_joint_impedance"]),
+            )
         )
-    )
+    raise ValueError(f"Unsupported robot backend: {backend!r}")
 
 
 def _make_camera(config: dict) -> OpenCVCamera:

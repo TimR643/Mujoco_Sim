@@ -54,10 +54,24 @@ building the image, refresh the editable install:
 python3 -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
 ```
 
-The environment must already contain the same Polymetis and `gello_software`
-Panda dependencies you use for the real Franka path.
+The container intentionally does not install Polymetis itself. Official Polymetis
+installation is conda/source based and targets a dedicated Python environment;
+use the same Polymetis environment you use for `gello_software`, or make it
+visible to this container before selecting the real `polymetis` backend. See the
+official installation docs: https://facebookresearch.github.io/fairo/polymetis/installation.html
 
-## 4. Record one hardcoded pick episode
+## 4. Smoke-test the recorder without Polymetis
+
+If `import polymetis` fails, verify the data path with the in-process mock robot
+first. This does not control MuJoCo, but it confirms config loading, hardcoded
+trajectory interpolation, dataset writing, and CLI wiring:
+
+```bash
+ROBOT_BACKEND=mock CAMERA_FLAG=--no-camera \
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
+```
+
+## 5. Record one hardcoded pick episode through Polymetis
 
 The hardcoded agent replaces only the physical GELLO device. It produces the
 same style of absolute 8-D Panda command that a GELLO agent would produce.
@@ -72,7 +86,7 @@ OpenCV. Episodes are written below `lerobot.root` with keys named like LeRobot
 observations/actions: `observation.state`, `observation.images.wrist`, and
 `action`.
 
-## 5. Train the LeRobot policy
+## 6. Train the LeRobot policy
 
 After converting/registering the local dataset if required by your installed
 LeRobot version, train with the included wrapper:
@@ -83,7 +97,7 @@ OUTPUT_DIR=/home/fer_ros2_sim/data/lerobot_outputs/act_fer_mujoco_cube_pick \
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/train_lerobot_act.sh
 ```
 
-## 6. Execute the trained model through Polymetis
+## 7. Execute the trained model through Polymetis
 
 ```bash
 POLICY_PATH=/home/fer_ros2_sim/data/lerobot_outputs/act_fer_mujoco_cube_pick/checkpoints/last/pretrained_model \
@@ -94,13 +108,13 @@ CAMERA_FLAG=--no-camera \
 Again, remove `CAMERA_FLAG=--no-camera` after the wrist camera stream is ready.
 The policy rollout uses the same Polymetis command path as recording.
 
-## 7. Tune only the task waypoints
+## 8. Tune only the task waypoints
 
 Tune `trajectory.waypoints` in `configs/perfect_pick.yaml` to your cube pose.
 Keep the Polymetis endpoint, dataset metadata, and observation/action names
 stable so the verification run remains comparable to the real GELLO pipeline.
 
-## 8. Troubleshooting: `No such file or directory` for `.docker/*`
+## 9. Troubleshooting: `No such file or directory` for `.docker/*`
 
 If you see a prompt like this:
 
@@ -122,7 +136,7 @@ cd /path/to/your/fer_ros2_mujoco_docker
 The path `/workspace/Mujoco_Sim` is only an example from an automation workspace;
 use the actual directory where you cloned this repository.
 
-## 9. Troubleshooting: ROS 2 controller-manager overrun messages
+## 10. Troubleshooting: ROS 2 controller-manager overrun messages
 
 Messages such as `Overrun detected! The controller manager missed its desired
 rate of 1000 Hz` come from the ROS 2 `ros2_control_node`. They are not produced
@@ -132,7 +146,7 @@ a ROS 2 MuJoCo launch file, that can still be useful for other experiments, but
 it is not the command path used by `record_hardcoded_pick.sh` or
 `run_policy_rollout.sh`.
 
-## 10. Troubleshooting: Docker build fails while installing LeRobot
+## 11. Troubleshooting: Docker build fails while installing LeRobot
 
 If the build fails with a message like:
 
@@ -154,3 +168,20 @@ image after pulling this change:
 Only run `./.docker/run_container.sh` after the build completes successfully. If
 you executed both commands as two separate shell lines, the run command can still
 start an older image after a failed build.
+
+## 12. Troubleshooting: `ModuleNotFoundError: No module named 'polymetis'`
+
+This means the LeRobot/verification venv is working, but the real Polymetis
+client library is not installed or not visible in the running container. This is
+expected in a plain ROS Docker image because Polymetis is not a standard PyPI
+dependency; install/activate your `gello_software` Polymetis environment for real
+MuJoCo control. Until then, run:
+
+```bash
+ROBOT_BACKEND=mock CAMERA_FLAG=--no-camera \
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
+```
+
+That mock command should produce a dataset episode without commanding MuJoCo.
+After Polymetis is installed and your MuJoCo Polymetis endpoint is running, omit
+`ROBOT_BACKEND=mock` so the default `robot_backend: polymetis` is used.

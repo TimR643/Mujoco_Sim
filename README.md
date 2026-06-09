@@ -148,12 +148,18 @@ from the directory that contains `.docker/`.
 4. Add `polymetis_lerobot_mujoco/mujoco/framos_d435e_wrist_camera.xml` to the
    Panda wrist/hand body in your MJCF and expose that rendered camera as an
    OpenCV-readable stream/device.
-5. Record the hardcoded pick demonstration from inside the container:
+5. If Polymetis is not installed/active yet, run a no-robot smoke test first:
+   ```bash
+   ROBOT_BACKEND=mock CAMERA_FLAG=--no-camera \
+   /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
+   ```
+6. After installing/activating your real `gello_software` Polymetis environment
+   and starting the Polymetis MuJoCo endpoint, record the real hardcoded pick:
    ```bash
    CAMERA_FLAG=--no-camera \
    /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
    ```
-6. Train and replay with the wrappers documented in
+7. Train and replay with the wrappers documented in
    `polymetis_lerobot_mujoco/docs/POLYMETIS_GELLO_PIPELINE.md`.
 
 Tune only the task waypoints in
