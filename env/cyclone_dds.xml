@@ -1,23 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<CycloneDDS xmlns="https://cdds.io/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://cdds.io/config https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
+<CycloneDDS xmlns="https://cdds.io/config" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="https://cdds.io/config
+https://raw.githubusercontent.com/eclipse-cyclonedds/cyclonedds/master/etc/cyclonedds.xsd">
     <Domain id="any">
         <Internal>
-            <!-- Large ROS description topics and controller-manager service
-                 responses exceed CycloneDDS' small defaults. Keep this high
-                 enough for /robot_description and /mujoco_robot_description. -->
             <SocketReceiveBufferSize min="10MB"/>
         </Internal>
         <General>
-            <!-- /mujoco_robot_description is a very large std_msgs/String.
-                 A 64 KiB MaxMessageSize drops it before ros2_control can
-                 receive it, which leaves the controller manager unavailable
-                 and all controller spawners timing out. -->
-            <MaxMessageSize>20MB</MaxMessageSize>
-            <FragmentSize>64KB</FragmentSize>
+            <MaxMessageSize>65535B</MaxMessageSize>
+            <FragmentSize>4000B</FragmentSize>
         </General>
         <SharedMemory>
-            <!-- Keep SHM disabled for this workflow: dynamic strings and
-                 controller-manager service vectors are not Iceoryx-friendly. -->
             <Enable>false</Enable>
         </SharedMemory>
     </Domain>

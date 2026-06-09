@@ -570,19 +570,21 @@ docker exec -it fer_ros2_mujoco_docker bash
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_polymetis_after_mujoco.sh
 ```
 
-The check helper verifies that `/mujoco_robot_description`,
-`/controller_manager/list_controllers`, and `/joint_states` are present. The
-Polymetis helper then waits until `/joint_states` and the controller manager are
-available before calling the GELLO compatibility launcher. Keep this terminal or
-its tmux session open. If the check fails, the MuJoCo launch is not ready yet; do
-not start Polymetis. If controller spawners repeatedly print `Could not contact
-service /controller_manager/list_controllers`, do not chase a real-time-kernel
-issue first. A few 1000 Hz overrun warnings are expected on non-real-time Docker
-hosts; the fatal symptom is usually that the large `/mujoco_robot_description`
-message was dropped before `ros2_control_node` received it. Restart the
-container through `./.docker/run_container.sh` so it exports
-`CYCLONEDDS_URI=file:///home/fer_ros2_sim/env/cyclone_dds.xml`, whose
-`MaxMessageSize` is 20 MB.
+The check helper verifies that `/controller_manager/list_controllers` and
+`/joint_states` are present and reports `/mujoco_robot_description` when visible.
+The Polymetis helper then waits until `/joint_states` and the controller manager
+are available before calling the GELLO compatibility launcher. Keep this terminal
+or its tmux session open. If the check fails, the MuJoCo launch is not ready yet;
+do not start Polymetis. If controller spawners repeatedly print `Could not
+contact service /controller_manager/list_controllers`, do not chase a
+real-time-kernel issue first. A few 1000 Hz overrun warnings are expected on
+non-real-time Docker hosts; a missing controller-manager service means the normal
+MuJoCo launch path has not reached readiness. The Docker run script now pins the mounted base DDS profile
+`/home/fer_ros2_sim/env/cyclone_dds.xml`, whose values match the base repository
+launch-compatible profile, so older rebuilt images do not keep an experimental
+profile. If you explicitly want to test the larger message-size DDS profile,
+start Terminal A with `MUJOCO_DDS_PROFILE=large`; the default path remains on the
+base profile.
 
 ### Terminal C: wait for Polymetis and record
 

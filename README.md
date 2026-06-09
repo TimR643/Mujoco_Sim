@@ -156,16 +156,16 @@ the Polymetis/GELLO server layer, and only then run the hardcoded recorder.
    /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_polymetis_after_mujoco.sh
    ```
 
-   If `check_mujoco_environment.sh` reports that `/mujoco_robot_description`,
-   `/controller_manager/list_controllers`, or `/joint_states` is missing, keep
-   Terminal A open and fix the MuJoCo launch before starting Polymetis. The
-   repeated controller-spawner warnings are a symptom of this missing readiness.
-   You do **not** need a real-time kernel to fix the shown launch failure: the
-   important failure is that the large `/mujoco_robot_description` message is
-   not delivered to `ros2_control_node`. `run_container.sh` now forces the
-   mounted CycloneDDS profile (`/home/fer_ros2_sim/env/cyclone_dds.xml`) with a
-   20 MB `MaxMessageSize`; restart the container through `./.docker/run_container.sh`
-   after pulling this change.
+   If `check_mujoco_environment.sh` reports that `/controller_manager/list_controllers`
+   or `/joint_states` is missing, keep Terminal A open and fix the MuJoCo launch
+   before starting Polymetis. The repeated controller-spawner warnings are a
+   symptom of this missing readiness. You do **not** need a real-time kernel to
+   fix a missing controller-manager service; first restore the normal MuJoCo
+   launch path. `run_container.sh` now pins the mounted **base** DDS profile
+   (`/home/fer_ros2_sim/env/cyclone_dds.xml`) so even an older rebuilt image uses
+   the normal launch-compatible settings. If you explicitly want to test the
+   larger DDS profile, start the wrapper with `MUJOCO_DDS_PROFILE=large`;
+   otherwise the default launch path stays on the base profile.
 
 3. **Container terminal C: wait for Polymetis and record**
    ```bash
