@@ -53,6 +53,8 @@ for FOLDER in ros2_ws/src env log data; do
     fi
 done
 
+gid=1000
+
 docker build \
     --build-arg UID="$uid" \
     --build-arg GID="$gid" \
