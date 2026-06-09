@@ -4,7 +4,7 @@ set -euo pipefail
 LAUNCH_FILE=${LAUNCH_FILE:-fer_mujoco_ros2_control.launch.py}
 PACKAGE=${PACKAGE:-franka_mujoco_sim_bringup}
 MUJOCO_DDS_PROFILE=${MUJOCO_DDS_PROFILE:-default}
-MUJOCO_DESCRIPTION_WATCHDOG=${MUJOCO_DESCRIPTION_WATCHDOG:-1}
+MUJOCO_DESCRIPTION_WATCHDOG=${MUJOCO_DESCRIPTION_WATCHDOG:-0}
 ROS_SAFE_PATH=${ROS_SAFE_PATH:-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin}
 export PATH="$ROS_SAFE_PATH"
 
@@ -55,9 +55,10 @@ start_polymetis_after_mujoco.sh.
 
 Note: a few 1000 Hz controller-manager overrun warnings are not the root cause
 of launch failure. The fatal symptom is missing /controller_manager readiness.
-If controller_manager never becomes available, leave this terminal open and
-inspect /tmp/mujoco_robot_description_republisher.log. The watchdog republishes
-/mujoco_robot_description until /controller_manager/list_controllers exists.
+By default this wrapper does not run extra publishers or DDS overrides; it should
+behave like the repository's normal ros2 launch path. Only enable the optional
+/mujoco_robot_description watchdog with MUJOCO_DESCRIPTION_WATCHDOG=1 if you have
+verified that the plain launch works except for a missed one-shot description.
 MESSAGE_EOF
 
 status=0

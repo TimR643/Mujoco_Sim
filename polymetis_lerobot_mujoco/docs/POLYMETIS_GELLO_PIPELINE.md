@@ -557,13 +557,12 @@ three terminals attached to the same Docker container.
 
 By default this launches `franka_mujoco_sim_bringup` with the lighter
 `fer_mujoco_ros2_control.launch.py`. Use this as the stable base environment
-before attaching Polymetis. The wrapper starts a `/mujoco_robot_description`
-republisher watchdog before the launch so the ros2_control node can still obtain
-the MJCF description if it misses the converter's one-shot publication. This
-addresses the failure pattern where every controller spawner times out on
-`/controller_manager/list_controllers` and the MuJoCo node later reports a
-`Timeout waiting for /mujoco_robot_description topic`. To launch the MoveIt/RViz
-setup instead:
+before attaching Polymetis. The wrapper intentionally does not start an extra
+`/mujoco_robot_description` publisher and does not change DDS settings in the
+default path, so this first step remains equivalent to the repository's normal
+`ros2 launch` behavior. If the plain launch works except for a verified missed
+one-shot description publication, opt in with `MUJOCO_DESCRIPTION_WATCHDOG=1`.
+To launch the MoveIt/RViz setup instead:
 
 ```bash
 LAUNCH_FILE=fer_mujoco_moveit.launch.py \

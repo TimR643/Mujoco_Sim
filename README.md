@@ -147,11 +147,12 @@ the Polymetis/GELLO server layer, and only then run the hardcoded recorder.
    The default launch file is now the lighter `fer_mujoco_ros2_control.launch.py`
    because this is the stable base environment for attaching Polymetis. Override
    with `LAUNCH_FILE=fer_mujoco_moveit.launch.py` only if you explicitly need
-   MoveIt/RViz during this step. The wrapper also starts a short-lived
-   `/mujoco_robot_description` republisher watchdog before `ros2 launch`; this
-   handles the launch-order race where `mujoco_ros2_control_node` misses the
-   one-shot MJCF description publication and then all controller spawners time
-   out on `/controller_manager/list_controllers`.
+   MoveIt/RViz during this step. By default the wrapper does **not** start an
+   extra `/mujoco_robot_description` publisher and does **not** change DDS
+   settings; the first diagnostic step should stay equivalent to the repository's
+   normal `ros2 launch` path. If the plain launch works except for a proven
+   missed one-shot description publication, opt in with
+   `MUJOCO_DESCRIPTION_WATCHDOG=1`.
 
 2. **Container terminal B: verify MuJoCo/ros2_control readiness, then attach/start Polymetis**
    ```bash
