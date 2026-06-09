@@ -575,7 +575,14 @@ The check helper verifies that `/mujoco_robot_description`,
 Polymetis helper then waits until `/joint_states` and the controller manager are
 available before calling the GELLO compatibility launcher. Keep this terminal or
 its tmux session open. If the check fails, the MuJoCo launch is not ready yet; do
-not start Polymetis.
+not start Polymetis. If controller spawners repeatedly print `Could not contact
+service /controller_manager/list_controllers`, do not chase a real-time-kernel
+issue first. A few 1000 Hz overrun warnings are expected on non-real-time Docker
+hosts; the fatal symptom is usually that the large `/mujoco_robot_description`
+message was dropped before `ros2_control_node` received it. Restart the
+container through `./.docker/run_container.sh` so it exports
+`CYCLONEDDS_URI=file:///home/fer_ros2_sim/env/cyclone_dds.xml`, whose
+`MaxMessageSize` is 20 MB.
 
 ### Terminal C: wait for Polymetis and record
 

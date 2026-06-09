@@ -123,3 +123,15 @@ Example launch.py injection:
 
     # Note: Apply this same additional_env trick to `robot_state_publisher` 
 ```
+
+### Current MuJoCo launch profile requirement
+
+The active `env/cyclone_dds.xml` profile intentionally disables CycloneDDS
+shared memory and raises `MaxMessageSize` to 20 MB. This is required because the
+converted `/mujoco_robot_description` is a very large `std_msgs/String`. If the
+container uses an older profile with `MaxMessageSize` around 64 KiB, the MuJoCo
+MJCF description can be dropped, `mujoco_ros2_control_node` times out waiting for
+`/mujoco_robot_description`, `/controller_manager/list_controllers` never
+appears, and all controller spawners retry until they fail. This failure is not
+fixed by a real-time kernel; restart the container through `./.docker/run_container.sh`
+so `CYCLONEDDS_URI=file:///home/fer_ros2_sim/env/cyclone_dds.xml` is exported.

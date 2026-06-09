@@ -160,6 +160,12 @@ the Polymetis/GELLO server layer, and only then run the hardcoded recorder.
    `/controller_manager/list_controllers`, or `/joint_states` is missing, keep
    Terminal A open and fix the MuJoCo launch before starting Polymetis. The
    repeated controller-spawner warnings are a symptom of this missing readiness.
+   You do **not** need a real-time kernel to fix the shown launch failure: the
+   important failure is that the large `/mujoco_robot_description` message is
+   not delivered to `ros2_control_node`. `run_container.sh` now forces the
+   mounted CycloneDDS profile (`/home/fer_ros2_sim/env/cyclone_dds.xml`) with a
+   20 MB `MaxMessageSize`; restart the container through `./.docker/run_container.sh`
+   after pulling this change.
 
 3. **Container terminal C: wait for Polymetis and record**
    ```bash

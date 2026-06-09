@@ -28,6 +28,15 @@ source_ros
 
 echo "MuJoCo/ROS readiness check"
 echo "  timeout: ${TIMEOUT_S}s"
+echo "  RMW:     ${RMW_IMPLEMENTATION:-<unset>}"
+echo "  DDS:     ${CYCLONEDDS_URI:-<unset>}"
+DDS_PROFILE=${CYCLONEDDS_URI#file://}
+if [ -n "${CYCLONEDDS_URI:-}" ] && [ -f "$DDS_PROFILE" ]; then
+  if grep -q '<MaxMessageSize>65535B</MaxMessageSize>' "$DDS_PROFILE"; then
+    echo "ERROR: DDS profile still has MaxMessageSize=65535B; large MuJoCo descriptions can be dropped." >&2
+    exit 1
+  fi
+fi
 echo
 
 echo "ROS nodes:"

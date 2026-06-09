@@ -31,6 +31,15 @@ PACKAGE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 cd "$PACKAGE_ROOT"
 echo -e "${GREEN_BOLD}Using repository root: ${PACKAGE_ROOT}${RESET}"
 
+DDS_PROFILE="$PACKAGE_ROOT/env/cyclone_dds.xml"
+if [ -f "$DDS_PROFILE" ]; then
+    if grep -q "<MaxMessageSize>65535B</MaxMessageSize>" "$DDS_PROFILE"; then
+        echo -e "${YELLOW_BOLD}Warning: ${DDS_PROFILE} still has MaxMessageSize=65535B.${RESET}"
+        echo -e "${YELLOW_BOLD}Large /mujoco_robot_description messages can be dropped; pull the latest profile before launching MuJoCo.${RESET}"
+    fi
+    echo -e "${GREEN_BOLD}CycloneDDS profile: $(grep -m1 '<MaxMessageSize>' "$DDS_PROFILE" | xargs || true)${RESET}"
+fi
+
 GELLO_COMPAT_WRAPPER="$PACKAGE_ROOT/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh"
 if [ -f "$GELLO_COMPAT_WRAPPER" ]; then
     if ! grep -q "tmux list-sessions" "$GELLO_COMPAT_WRAPPER"; then
@@ -71,6 +80,8 @@ docker run \
     --ipc host \
     -e DISPLAY=${DISPLAY:-} \
     -e MAMBA_ROOT_PREFIX=/home/${CONTAINER_USER}/micromamba \
+    -e RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
+    -e CYCLONEDDS_URI=file:///home/${CONTAINER_USER}/env/cyclone_dds.xml \
     -e PATH=/home/${CONTAINER_USER}/.local/bin:/opt/fer_lerobot_venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v ~/.Xauthority:/home/${CONTAINER_USER}/.Xauthority \
