@@ -124,6 +124,16 @@ used for recording or policy rollout.
 * A local LeRobot-style dataset boundary and wrappers for ACT training and
   policy rollout through Polymetis.
 
+
+### `gello_software` checkout
+
+`gello_software/` is intentionally a **local external checkout**, not a tracked
+submodule of this repository. Clone or copy your GELLO repository into the host
+folder `gello_software/`; `run_container.sh` mounts that folder to
+`/home/fer_ros2_sim/gello_software` inside Docker. This avoids broken Gitlink
+entries in VS Code while still making the GELLO launcher available in the
+container.
+
 ### Quick start
 
 Run the Docker helper scripts from the **host checkout**, not from inside the

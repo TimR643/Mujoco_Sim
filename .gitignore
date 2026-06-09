@@ -64,3 +64,6 @@ data/
 .local_container/
 
 .miniconda3_container/
+
+# Local external GELLO checkout mounted into Docker; do not track as a submodule.
+gello_software/

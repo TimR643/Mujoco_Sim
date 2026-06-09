@@ -519,3 +519,25 @@ to date` but the grep finds nothing, your local branch/remote does not contain
 this fix yet. Apply the branch that contains this change, or update the file from
 the PR before starting the container again. The run script now prints a warning
 when the host wrapper lacks the marker, before Docker starts.
+
+## 21. Troubleshooting: VS Code cannot open `gello_software (<commit>)`
+
+If VS Code shows an error like `Unable to open 'gello_software (9be5302)'` or a
+`git:/.../gello_software?...` URI, Git is treating `gello_software` as a Gitlink
+/submodule entry. This repository should not track `gello_software` as a submodule;
+it is a local external checkout mounted into Docker. The fix is to remove the
+Gitlink from this repository's index and ignore the local checkout directory.
+
+After pulling the fix, `git status --short` should no longer show `M
+gello_software` merely because your local GELLO checkout changed. Clone/copy your
+GELLO repository into the ignored host folder instead:
+
+```bash
+cd ~/fer_ros2_mujoco_docker
+mkdir -p gello_software
+# copy or clone your GELLO repo contents into ./gello_software
+./.docker/run_container.sh
+```
+
+Inside the container the same folder appears at
+`/home/fer_ros2_sim/gello_software`.
