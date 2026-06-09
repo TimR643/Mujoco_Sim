@@ -104,3 +104,46 @@ This repository is currently a work in progress.
   ```
 * Run a clean `colcon build` before submitting a Pull Request.
 # Mujoco_Sim
+
+## Perfect-condition Polymetis/GELLO → LeRobot verification pipeline
+
+This repository now includes `polymetis_lerobot_mujoco`, a Python package for
+testing the full imitation-learning path in MuJoCo before using the physical
+GELLO. The Panda command path is deliberately the same as in `gello_software` for
+Franka FER/Panda: Python sends 8-D commands (`7 arm joints + normalized gripper`)
+through `polymetis.RobotInterface` and `polymetis.GripperInterface`. No ROS 2
+controller, `FollowJointTrajectory` action, or `ros2_control` command path is
+used for recording or policy rollout.
+
+### What is included
+
+* A MuJoCo-native FRAMOS D435e wrist-camera MJCF snippet.
+* A deterministic single-cube pick trajectory in GELLO/Panda 8-D joint format.
+* A hardcoded-agent recorder that replaces only the physical GELLO device while
+  keeping the Polymetis Franka control boundary.
+* A local LeRobot-style dataset boundary and wrappers for ACT training and
+  policy rollout through Polymetis.
+
+### Quick start
+
+1. Start your MuJoCo Franka behind the Polymetis endpoint used by your
+   `gello_software` Panda setup.
+2. Add `polymetis_lerobot_mujoco/mujoco/framos_d435e_wrist_camera.xml` to the
+   Panda wrist/hand body in your MJCF and expose that rendered camera as an
+   OpenCV-readable stream/device.
+3. Install the package:
+   ```bash
+   python3 -m pip install -e polymetis_lerobot_mujoco
+   ```
+4. Record the hardcoded pick demonstration:
+   ```bash
+   CONFIG=/workspace/Mujoco_Sim/polymetis_lerobot_mujoco/configs/perfect_pick.yaml \
+   polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
+   ```
+5. Train and replay with the wrappers documented in
+   `polymetis_lerobot_mujoco/docs/POLYMETIS_GELLO_PIPELINE.md`.
+
+Tune only the task waypoints in
+`polymetis_lerobot_mujoco/configs/perfect_pick.yaml` to match the cube pose in
+your MuJoCo scene while keeping the Polymetis endpoint and observation/action
+names unchanged.

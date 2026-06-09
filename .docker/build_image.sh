@@ -24,23 +24,24 @@ GREEN_BOLD="\033[1;32m"
 RESET="\033[0m"
 
 PACKAGE_NAME="fer_ros2_mujoco_docker"
+PACKAGE_ROOT_NAME="Mujoco_Sim"
 CONTAINER_USER="fer_ros2_sim"
 
 # Set Package root
-if [[ "$(pwd)" == *"/$PACKAGE_NAME/"* ]]; then
+if [[ "$(pwd)" == *"/$PACKAGE_ROOT_NAME/"* ]]; then
     # Case A: Inside a subdirectory
     echo -e "${YELLOW_BOLD}Inside subdirectory. Navigating to root...${RESET}"
     # Strip everything after the package name to find the root
     _cwd="$(pwd)"
-    PACKAGE_ROOT="${_cwd%%/$PACKAGE_NAME/*}/$PACKAGE_NAME"
+    PACKAGE_ROOT="${_cwd%%/$PACKAGE_ROOT_NAME/*}/$PACKAGE_ROOT_NAME"
     cd "$PACKAGE_ROOT" || exit 1
-elif [[ "$(pwd)" == *"/$PACKAGE_NAME" ]]; then
+elif [[ "$(pwd)" == *"/$PACKAGE_ROOT_NAME" ]]; then
     # Case B: Already at the root
     echo -e "${GREEN_BOLD}Already at package root.${RESET}"
     PACKAGE_ROOT="$(pwd)"
 else
     # Case C: Not in the package at all
-    echo -e "${RED_BOLD}Error: You are not inside the directory '$PACKAGE_NAME'.${RESET}"
+    echo -e "${RED_BOLD}Error: You are not inside the directory '$PACKAGE_ROOT_NAME'.${RESET}"
     echo "Current path: $(pwd)"
     exit 1
 fi

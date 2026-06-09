@@ -25,10 +25,17 @@ RUN apt-get update && apt-get upgrade -y \
     cmake \
     git \
     gcc \
+    ffmpeg \
+    libgl1 \
+    libusb-1.0-0-dev \
+    v4l-utils \
     libpoco-dev \
     libfmt-dev  \
     libeigen3-dev \
     python3-pip \
+    python3-setuptools \
+    python3-wheel \
+    python3-opencv \
     ros-${ROS_DISTRO}-moveit \
     ros-${ROS_DISTRO}-rmw-cyclonedds-cpp \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -86,6 +93,14 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive && \
     ros-${ROS_DISTRO}-moveit-task-constructor-capabilities \
     ros-${ROS_DISTRO}-moveit-task-constructor-visualization \
     && rm -rf /var/lib/apt/lists/*
+
+RUN python3 -m pip install --break-system-packages --no-cache-dir \
+    "lerobot" \
+    "pyarrow" \
+    "opencv-python"
+
+COPY --chown=$USER:$USER polymetis_lerobot_mujoco /home/$USER/polymetis_lerobot_mujoco
+RUN python3 -m pip install --break-system-packages --no-cache-dir --no-deps --no-build-isolation -e /home/$USER/polymetis_lerobot_mujoco
 
 USER ${USER}
 

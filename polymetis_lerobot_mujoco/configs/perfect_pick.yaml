@@ -1,0 +1,66 @@
+# Polymetis/GELLO-compatible perfect-condition Franka pick pipeline.
+# No ROS 2 controllers are used by the recorder or policy rollout. The only
+# robot command path is the Polymetis RobotInterface/GripperInterface path used
+# by gello_software for the Panda.
+polymetis:
+  robot_ip: 127.0.0.1
+  gripper_ip: 127.0.0.1
+  hz: 30
+  max_joint_delta_per_step: 0.05
+  go_home_on_connect: true
+  start_joint_impedance: true
+
+robot:
+  joint_names:
+    - panda_joint1
+    - panda_joint2
+    - panda_joint3
+    - panda_joint4
+    - panda_joint5
+    - panda_joint6
+    - panda_joint7
+    - panda_gripper_width_normalized
+  max_open_width_m: 0.09
+  home: [0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785, 0.0]
+
+camera:
+  wrist:
+    type: opencv
+    device: 0
+    width: 640
+    height: 480
+    fps: 30
+    frame: framos_d435e_color_optical_frame
+
+lerobot:
+  repo_id: local/fer_mujoco_cube_pick
+  root: /home/fer_ros2_sim/data/lerobot_mujoco_cube_pick
+  task: Pick the cube with the Franka Panda in perfect MuJoCo conditions.
+  fps: 30
+  num_episodes: 1
+  episode_index: 0
+  warmup_seconds: 2.0
+  settle_seconds: 1.0
+
+trajectory:
+  # 8th value is normalized gripper command in the gello_software convention:
+  # 0.0=open, 1.0=closed. The 7 first values are Panda joint targets in radians.
+  waypoints:
+    - name: home
+      duration_s: 2.0
+      joints: [0.0, -0.785, 0.0, -2.356, 0.0, 1.571, 0.785, 0.0]
+    - name: pre_grasp
+      duration_s: 2.0
+      joints: [0.35, -0.62, 0.06, -2.18, -0.02, 1.78, 1.10, 0.0]
+    - name: grasp
+      duration_s: 1.5
+      joints: [0.35, -0.44, 0.08, -2.42, -0.03, 1.98, 1.10, 0.0]
+    - name: close
+      duration_s: 1.0
+      joints: [0.35, -0.44, 0.08, -2.42, -0.03, 1.98, 1.10, 1.0]
+    - name: lift
+      duration_s: 1.5
+      joints: [0.35, -0.73, 0.08, -2.04, -0.03, 1.68, 1.10, 1.0]
+    - name: place_preview
+      duration_s: 2.0
+      joints: [-0.25, -0.70, -0.05, -2.08, 0.0, 1.70, 0.55, 1.0]

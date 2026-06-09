@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "polymetis-lerobot-mujoco"
+version = "0.1.0"
+description = "Polymetis/GELLO-style Franka MuJoCo verification pipeline with a hardcoded LeRobot recording motion."
+requires-python = ">=3.10"
+dependencies = [
+  "numpy",
+  "opencv-python",
+  "pyyaml",
+  "torch",
+]
+
+[project.scripts]
+fer-polymetis-record-hardcoded-pick = "polymetis_lerobot_mujoco.record_hardcoded_pick:main"
+fer-polymetis-policy-rollout = "polymetis_lerobot_mujoco.policy_rollout:main"
+fer-polymetis-print-config = "polymetis_lerobot_mujoco.print_config:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["polymetis_lerobot_mujoco*"]
+
+[tool.setuptools.package-data]
+polymetis_lerobot_mujoco = []
