@@ -249,6 +249,8 @@ calling `python -m polymetis_lerobot_mujoco...` and adding the package checkout 
 ```bash
 cd /home/fer_ros2_sim/polymetis_lerobot_mujoco
 git pull  # if this directory is a git checkout; otherwise update it from the host mount
+export MAMBA_ROOT_PREFIX=/home/fer_ros2_sim/micromamba
+eval "$(micromamba shell hook --shell bash)"
 micromamba activate polymetis_py38
 which python
 python -c "from polymetis import RobotInterface, GripperInterface; print('real polymetis ok')"
@@ -265,3 +267,35 @@ ERROR: Package 'polymetis-lerobot-mujoco' requires a different Python: 3.8.15 no
 The package metadata has been lowered to `requires-python = ">=3.8"`. If you still
 see `>=3.10`, the container is using an older copy of this repository. Pull or
 remount the updated repository, then rerun the editable install.
+
+## 15. Troubleshooting: `micromamba: command not found` after restarting the container
+
+The Docker container is started with `--rm`, so anything installed only inside the
+container filesystem disappears when you type `exit`. The run script now mounts
+three persistent host folders into the container:
+
+- `.micromamba_container/` → `/home/fer_ros2_sim/micromamba`
+- `.local_container/` → `/home/fer_ros2_sim/.local`
+- `gello_software/` → `/home/fer_ros2_sim/gello_software`
+
+After pulling this change, restart the container. Then install micromamba and the
+Polymetis env once with:
+
+```bash
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/setup_polymetis_py38.sh
+```
+
+For later container sessions, activate the persisted environment with:
+
+```bash
+export MAMBA_ROOT_PREFIX=/home/fer_ros2_sim/micromamba
+eval "$(micromamba shell hook --shell bash)"
+micromamba activate polymetis_py38
+which python
+python -c "from polymetis import RobotInterface, GripperInterface; print('real polymetis ok')"
+```
+
+If `cd gello_software` failed before, it was because the repo directory was not
+mounted into the container. The run script now mounts it at
+`/home/fer_ros2_sim/gello_software`; populate the host `gello_software/` folder
+with your checkout if you want to use it inside this container.

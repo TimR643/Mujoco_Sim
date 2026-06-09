@@ -46,7 +46,7 @@ for FOLDER in ros2_ws/src env log data; do
 done
 
 # Create the .claude_container, so sessions with claude inside docker persist
-for FOLDER in .claude_container; do
+for FOLDER in .claude_container .micromamba_container .local_container gello_software; do
     HOST_PATH="$PACKAGE_ROOT/$FOLDER"
     if [ ! -d "$HOST_PATH" ]; then
         echo -e "${YELLOW_BOLD}Warning: $HOST_PATH does not exist. Creating it...${RESET}"
@@ -61,12 +61,17 @@ docker run \
     --net host \
     --ipc host \
     -e DISPLAY=${DISPLAY:-} \
+    -e MAMBA_ROOT_PREFIX=/home/${CONTAINER_USER}/micromamba \
+    -e PATH=/home/${CONTAINER_USER}/.local/bin:/opt/fer_lerobot_venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v ~/.Xauthority:/home/${CONTAINER_USER}/.Xauthority \
     -v $PACKAGE_ROOT/ros2_ws:/home/${CONTAINER_USER}/ros2_ws \
     -v $PACKAGE_ROOT/env:/home/${CONTAINER_USER}/env \
     -v $PACKAGE_ROOT/data:/home/${CONTAINER_USER}/data \
     -v $PACKAGE_ROOT/polymetis_lerobot_mujoco:/home/${CONTAINER_USER}/polymetis_lerobot_mujoco \
+    -v $PACKAGE_ROOT/gello_software:/home/${CONTAINER_USER}/gello_software \
+    -v $PACKAGE_ROOT/.micromamba_container:/home/${CONTAINER_USER}/micromamba \
+    -v $PACKAGE_ROOT/.local_container:/home/${CONTAINER_USER}/.local \
     -v $PACKAGE_ROOT/.claude_container:/home/${CONTAINER_USER}/.claude \
     --entrypoint /bin/bash \
     --rm \

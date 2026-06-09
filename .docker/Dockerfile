@@ -21,6 +21,7 @@ RUN apt-get update && apt-get upgrade -y \
     curl \
     wget \
     build-essential \
+    bzip2 \
     software-properties-common \
     cmake \
     git \

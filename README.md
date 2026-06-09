@@ -143,17 +143,30 @@ from the directory that contains `.docker/`.
    ```bash
    python3 -m pip install --no-deps --no-build-isolation -e /home/fer_ros2_sim/polymetis_lerobot_mujoco
    ```
-3. Start your MuJoCo Franka behind the Polymetis endpoint used by your
+3. If `micromamba` is missing after restarting the `--rm` container, install the
+   persistent Polymetis environment once. The helper stores micromamba and the
+   env in host-mounted folders so they survive container restarts:
+   ```bash
+   /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/setup_polymetis_py38.sh
+   ```
+4. Activate the Polymetis environment before real recording:
+   ```bash
+   export MAMBA_ROOT_PREFIX=/home/fer_ros2_sim/micromamba
+   eval "$(micromamba shell hook --shell bash)"
+   micromamba activate polymetis_py38
+   python -c "from polymetis import RobotInterface, GripperInterface; print('real polymetis ok')"
+   ```
+5. Start your MuJoCo Franka behind the Polymetis endpoint used by your
    `gello_software` Panda setup.
-4. Add `polymetis_lerobot_mujoco/mujoco/framos_d435e_wrist_camera.xml` to the
+6. Add `polymetis_lerobot_mujoco/mujoco/framos_d435e_wrist_camera.xml` to the
    Panda wrist/hand body in your MJCF and expose that rendered camera as an
    OpenCV-readable stream/device.
-5. If Polymetis is not installed/active yet, run a no-robot smoke test first:
+7. If Polymetis is not installed/active yet, run a no-robot smoke test first:
    ```bash
    ROBOT_BACKEND=mock CAMERA_FLAG=--no-camera \
    /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
    ```
-6. After installing/activating your real `gello_software` Polymetis environment
+8. After installing/activating your real `gello_software` Polymetis environment
    and starting the Polymetis MuJoCo endpoint, record the real hardcoded pick.
    The wrapper uses the currently active `python`, so activate the Polymetis
    conda/micromamba environment before calling it.
@@ -163,7 +176,7 @@ from the directory that contains `.docker/`.
    CAMERA_FLAG=--no-camera \
    /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_hardcoded_pick.sh
    ```
-7. Train and replay with the wrappers documented in
+9. Train and replay with the wrappers documented in
    `polymetis_lerobot_mujoco/docs/POLYMETIS_GELLO_PIPELINE.md`.
 
 Tune only the task waypoints in
