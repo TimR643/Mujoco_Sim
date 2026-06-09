@@ -4,12 +4,16 @@ set -euo pipefail
 WAIT_FOR_ROS=${WAIT_FOR_ROS:-1}
 WAIT_TIMEOUT_S=${WAIT_TIMEOUT_S:-120}
 
+# ROS/ament setup files legitimately reference optional variables that may be
+# unset. Temporarily disable nounset while sourcing them, then restore strict mode.
+set +u
 if [ -f /opt/ros/${ROS_DISTRO:-jazzy}/setup.bash ]; then
   source /opt/ros/${ROS_DISTRO:-jazzy}/setup.bash
 fi
 if [ -f "$HOME/ros2_ws/install/setup.bash" ]; then
   source "$HOME/ros2_ws/install/setup.bash"
 fi
+set -u
 
 if [ "$WAIT_FOR_ROS" = "1" ]; then
   echo "Waiting for the MuJoCo/ROS simulation to expose /joint_states ..."
