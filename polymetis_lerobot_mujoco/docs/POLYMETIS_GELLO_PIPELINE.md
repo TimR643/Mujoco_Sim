@@ -299,3 +299,35 @@ If `cd gello_software` failed before, it was because the repo directory was not
 mounted into the container. The run script now mounts it at
 `/home/fer_ros2_sim/gello_software`; populate the host `gello_software/` folder
 with your checkout if you want to use it inside this container.
+
+## 16. Troubleshooting: `Cannot locate Polymetis version!`
+
+The conda Polymetis package imports `polymetis._version`, which shells out to a
+`conda` command to locate the installed package version. In this container we use
+`micromamba`, so a plain Polymetis import can fail with:
+
+```text
+/bin/sh: 1: conda: not found
+Exception: Cannot locate Polymetis version!
+```
+
+The setup helper now creates a small compatibility shim at
+`/home/fer_ros2_sim/.local/bin/conda` that forwards `conda ...` calls to
+`micromamba ...`, and `run_container.sh` puts that directory on `PATH`. After
+pulling this change, rerun:
+
+```bash
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/setup_polymetis_py38.sh
+```
+
+Then activate with the shim on `PATH`:
+
+```bash
+export MAMBA_ROOT_PREFIX=/home/fer_ros2_sim/micromamba
+eval "$(micromamba shell hook --shell bash)"
+micromamba activate polymetis_py38
+export PATH=/home/fer_ros2_sim/.local/bin:$PATH
+command -v conda
+conda list polymetis
+python -c "from polymetis import RobotInterface, GripperInterface; print('real polymetis ok')"
+```

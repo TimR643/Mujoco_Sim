@@ -14,6 +14,15 @@ if ! command -v micromamba >/dev/null 2>&1; then
 fi
 
 MICROMAMBA=$(command -v micromamba || printf '%s' "$MICROMAMBA_BIN")
+CONDA_SHIM=${CONDA_SHIM:-$HOME/.local/bin/conda}
+cat > "$CONDA_SHIM" <<'SHIM'
+#!/usr/bin/env bash
+set -euo pipefail
+export MAMBA_ROOT_PREFIX="${MAMBA_ROOT_PREFIX:-$HOME/micromamba}"
+MICROMAMBA_BIN="${MICROMAMBA_BIN:-$HOME/.local/bin/micromamba}"
+exec "$MICROMAMBA_BIN" "$@"
+SHIM
+chmod +x "$CONDA_SHIM"
 
 "$MICROMAMBA" create -y -n "$ENV_NAME" -c conda-forge python=3.8 pip || true
 "$MICROMAMBA" install -y -n "$ENV_NAME" \
@@ -23,8 +32,9 @@ MICROMAMBA=$(command -v micromamba || printf '%s' "$MICROMAMBA_BIN")
   "pytorch=1.13.1" \
   cpuonly
 
-"$MICROMAMBA" run -n "$ENV_NAME" python -c "from polymetis import RobotInterface, GripperInterface; print('real polymetis ok')"
-"$MICROMAMBA" run -n "$ENV_NAME" python -m pip install --no-deps --no-build-isolation -e "$HOME/polymetis_lerobot_mujoco"
+"$MICROMAMBA" run -n "$ENV_NAME" env PATH="$HOME/.local/bin:$PATH" bash -c 'command -v conda && conda list polymetis'
+"$MICROMAMBA" run -n "$ENV_NAME" env PATH="$HOME/.local/bin:$PATH" python -c "from polymetis import RobotInterface, GripperInterface; print('real polymetis ok')"
+"$MICROMAMBA" run -n "$ENV_NAME" env PATH="$HOME/.local/bin:$PATH" python -m pip install --no-deps --no-build-isolation -e "$HOME/polymetis_lerobot_mujoco"
 
 cat <<EOF2
 
@@ -34,7 +44,9 @@ Activate it in an interactive shell with:
   export MAMBA_ROOT_PREFIX=${MAMBA_ROOT_PREFIX}
   eval "\$(${MICROMAMBA} shell hook --shell bash)"
   micromamba activate ${ENV_NAME}
+  export PATH=${HOME}/.local/bin:\$PATH
   which python
+  command -v conda
   python -c "from polymetis import RobotInterface, GripperInterface; print('real polymetis ok')"
 
 Then run:

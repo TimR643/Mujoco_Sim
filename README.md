@@ -154,6 +154,8 @@ from the directory that contains `.docker/`.
    export MAMBA_ROOT_PREFIX=/home/fer_ros2_sim/micromamba
    eval "$(micromamba shell hook --shell bash)"
    micromamba activate polymetis_py38
+   export PATH=/home/fer_ros2_sim/.local/bin:$PATH
+   command -v conda
    python -c "from polymetis import RobotInterface, GripperInterface; print('real polymetis ok')"
    ```
 5. Start your MuJoCo Franka behind the Polymetis endpoint used by your
