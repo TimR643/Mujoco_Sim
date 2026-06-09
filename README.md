@@ -144,14 +144,22 @@ the Polymetis/GELLO server layer, and only then run the hardcoded recorder.
    ```bash
    /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_mujoco_environment.sh
    ```
-   The default launch file is `fer_mujoco_moveit.launch.py`. Override with
-   `LAUNCH_FILE=fer_mujoco_ros2_control.launch.py` if you do not want MoveIt/RViz.
+   The default launch file is now the lighter `fer_mujoco_ros2_control.launch.py`
+   because this is the stable base environment for attaching Polymetis. Override
+   with `LAUNCH_FILE=fer_mujoco_moveit.launch.py` only if you explicitly need
+   MoveIt/RViz during this step.
 
-2. **Container terminal B: attach/start the Polymetis server layer after MuJoCo is up**
+2. **Container terminal B: verify MuJoCo/ros2_control readiness, then attach/start Polymetis**
    ```bash
    docker exec -it fer_ros2_mujoco_docker bash
+   /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/check_mujoco_environment.sh
    /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_polymetis_after_mujoco.sh
    ```
+
+   If `check_mujoco_environment.sh` reports that `/mujoco_robot_description`,
+   `/controller_manager/list_controllers`, or `/joint_states` is missing, keep
+   Terminal A open and fix the MuJoCo launch before starting Polymetis. The
+   repeated controller-spawner warnings are a symptom of this missing readiness.
 
 3. **Container terminal C: wait for Polymetis and record**
    ```bash

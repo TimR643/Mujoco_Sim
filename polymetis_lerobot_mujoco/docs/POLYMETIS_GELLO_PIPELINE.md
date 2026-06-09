@@ -553,12 +553,12 @@ three terminals attached to the same Docker container.
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_mujoco_environment.sh
 ```
 
-By default this launches `franka_mujoco_sim_bringup` with
-`fer_mujoco_moveit.launch.py`, so MuJoCo/RViz should be visible if display
-forwarding is working. To launch the ros2_control-only setup instead:
+By default this launches `franka_mujoco_sim_bringup` with the lighter
+`fer_mujoco_ros2_control.launch.py`. Use this as the stable base environment
+before attaching Polymetis. To launch the MoveIt/RViz setup instead:
 
 ```bash
-LAUNCH_FILE=fer_mujoco_ros2_control.launch.py \
+LAUNCH_FILE=fer_mujoco_moveit.launch.py \
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_mujoco_environment.sh
 ```
 
@@ -566,11 +566,16 @@ LAUNCH_FILE=fer_mujoco_ros2_control.launch.py \
 
 ```bash
 docker exec -it fer_ros2_mujoco_docker bash
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/check_mujoco_environment.sh
 /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_polymetis_after_mujoco.sh
 ```
 
-This helper waits until the ROS simulation exposes `/joint_states`, then calls the
-GELLO compatibility launcher. Keep this terminal or its tmux session open.
+The check helper verifies that `/mujoco_robot_description`,
+`/controller_manager/list_controllers`, and `/joint_states` are present. The
+Polymetis helper then waits until `/joint_states` and the controller manager are
+available before calling the GELLO compatibility launcher. Keep this terminal or
+its tmux session open. If the check fails, the MuJoCo launch is not ready yet; do
+not start Polymetis.
 
 ### Terminal C: wait for Polymetis and record
 
