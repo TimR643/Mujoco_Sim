@@ -87,3 +87,35 @@ Unless required by applicable law or agreed to in writing, software distributed
 under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied. See the License for the
 specific language governing permissions and limitations under the License.
+
+-------------------------------------------------------------------------
+8. GELLO software
+-------------------------------------------------------------------------
+Copyright (c) GELLO contributors.
+License: MIT License
+Source: https://github.com/wuphilipp/gello_software
+
+The verification package mirrors the GELLO launch/record/train/evaluate workflow
+at the pipeline level while replacing the physical GELLO input device with a
+hardcoded MuJoCo demonstration trajectory.
+
+-------------------------------------------------------------------------
+9. LeRobot
+-------------------------------------------------------------------------
+Copyright (c) Hugging Face and LeRobot contributors.
+License: Apache License 2.0
+Source: https://github.com/huggingface/lerobot
+
+LeRobot provides the training and policy interfaces used by the dataset and
+policy replay wrappers.
+
+-------------------------------------------------------------------------
+10. Polymetis
+-------------------------------------------------------------------------
+Copyright (c) Meta Platforms, Inc. and affiliates.
+License: MIT License
+Source: https://github.com/facebookresearch/fairo/tree/main/polymetis
+
+The corrected Franka verification path uses Polymetis as the only command
+interface for Panda arm and gripper control, matching the non-ROS Panda path in
+`gello_software`.
