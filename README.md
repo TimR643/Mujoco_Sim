@@ -134,6 +134,34 @@ folder `gello_software/`; `run_container.sh` mounts that folder to
 entries in VS Code while still making the GELLO launcher available in the
 container.
 
+
+### Recommended three-terminal MuJoCo → Polymetis → Recorder flow
+
+Use this flow when you want to first see/load the MuJoCo simulation, then attach
+the Polymetis/GELLO server layer, and only then run the hardcoded recorder.
+
+1. **Container terminal A: start MuJoCo/RViz first**
+   ```bash
+   /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_mujoco_environment.sh
+   ```
+   The default launch file is `fer_mujoco_moveit.launch.py`. Override with
+   `LAUNCH_FILE=fer_mujoco_ros2_control.launch.py` if you do not want MoveIt/RViz.
+
+2. **Container terminal B: attach/start the Polymetis server layer after MuJoCo is up**
+   ```bash
+   docker exec -it fer_ros2_mujoco_docker bash
+   /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_polymetis_after_mujoco.sh
+   ```
+
+3. **Container terminal C: wait for Polymetis and record**
+   ```bash
+   docker exec -it fer_ros2_mujoco_docker bash
+   /home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_after_polymetis_ready.sh
+   ```
+
+This makes the required ordering explicit: MuJoCo/ROS simulation first, then
+Polymetis/GELLO server, then the LeRobot-style recording.
+
 ### Quick start
 
 Run the Docker helper scripts from the **host checkout**, not from inside the

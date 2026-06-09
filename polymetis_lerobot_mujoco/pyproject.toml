@@ -18,6 +18,7 @@ dependencies = [
 fer-polymetis-record-hardcoded-pick = "polymetis_lerobot_mujoco.record_hardcoded_pick:main"
 fer-polymetis-policy-rollout = "polymetis_lerobot_mujoco.policy_rollout:main"
 fer-polymetis-print-config = "polymetis_lerobot_mujoco.print_config:main"
+fer-polymetis-wait = "polymetis_lerobot_mujoco.wait_for_polymetis:main"
 
 [tool.setuptools.packages.find]
 where = ["."]

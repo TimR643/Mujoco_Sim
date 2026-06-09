@@ -541,3 +541,49 @@ mkdir -p gello_software
 
 Inside the container the same folder appears at
 `/home/fer_ros2_sim/gello_software`.
+
+## 22. Recommended ordered launch: MuJoCo first, Polymetis second, recorder third
+
+For visual debugging, start the simulation before trying to connect Polymetis. Use
+three terminals attached to the same Docker container.
+
+### Terminal A: MuJoCo/RViz simulation
+
+```bash
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_mujoco_environment.sh
+```
+
+By default this launches `franka_mujoco_sim_bringup` with
+`fer_mujoco_moveit.launch.py`, so MuJoCo/RViz should be visible if display
+forwarding is working. To launch the ros2_control-only setup instead:
+
+```bash
+LAUNCH_FILE=fer_mujoco_ros2_control.launch.py \
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_mujoco_environment.sh
+```
+
+### Terminal B: Polymetis/GELLO server layer after simulation is up
+
+```bash
+docker exec -it fer_ros2_mujoco_docker bash
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/start_polymetis_after_mujoco.sh
+```
+
+This helper waits until the ROS simulation exposes `/joint_states`, then calls the
+GELLO compatibility launcher. Keep this terminal or its tmux session open.
+
+### Terminal C: wait for Polymetis and record
+
+```bash
+docker exec -it fer_ros2_mujoco_docker bash
+/home/fer_ros2_sim/polymetis_lerobot_mujoco/scripts/record_after_polymetis_ready.sh
+```
+
+This helper activates `polymetis_py38`, waits until `RobotInterface` and
+`GripperInterface` on `127.0.0.1` are reachable, and then runs
+`record_hardcoded_pick.sh` with `CAMERA_FLAG=--no-camera` by default. Remove or
+override `CAMERA_FLAG` once the wrist camera stream is available.
+
+If Terminal C times out, the Polymetis server layer in Terminal B did not bind to
+the configured robot/gripper endpoint. Check the Terminal B tmux panes before
+starting the recorder.
