@@ -59,3 +59,8 @@ temp/
 data/
 
 .claude_container
+
+.micromamba_container/
+.local_container/
+
+.miniconda3_container/

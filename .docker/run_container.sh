@@ -13,11 +13,9 @@
 #    See the License for the specific language governing permissions and
 #    limitations under the License.
 
-uid=$(eval "id -u")
-gid=$(eval "id -g")
+set -euo pipefail
 
 # ANSI escape codes
-RED_BOLD="\033[1;31m"
 YELLOW_BOLD="\033[1;33m"
 GREEN_BOLD="\033[1;32m"
 RESET="\033[0m"
@@ -25,27 +23,25 @@ RESET="\033[0m"
 PACKAGE_NAME="fer_ros2_mujoco_docker"
 CONTAINER_USER="fer_ros2_sim"
 
-# Set Package root
-if [[ "$(pwd)" == *"/$PACKAGE_NAME/"* ]]; then
-    # Case A: Inside a subdirectory
-    echo -e "${YELLOW_BOLD}Inside subdirectory. Navigating to root...${RESET}"
-    # Strip everything after the package name to find the root
-    _cwd="$(pwd)"
-    PACKAGE_ROOT="${_cwd%%/$PACKAGE_NAME/*}/$PACKAGE_NAME"
-    cd "$PACKAGE_ROOT" || exit 1
-elif [[ "$(pwd)" == *"/$PACKAGE_NAME" ]]; then
-    # Case B: Already at the root
-    echo -e "${GREEN_BOLD}Already at package root.${RESET}"
-    PACKAGE_ROOT="$(pwd)"
-else
-    # Case C: Not in the package at all
-    echo -e "${RED_BOLD}Error: You are not inside the directory '$PACKAGE_NAME'.${RESET}"
-    echo "Current path: $(pwd)"
-    exit 1
+# Resolve the repository root from this script location instead of assuming a
+# fixed checkout directory name. Docker scripts must be executed from the host
+# checkout, not from inside the already-running container's ~/ros2_ws.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+cd "$PACKAGE_ROOT"
+echo -e "${GREEN_BOLD}Using repository root: ${PACKAGE_ROOT}${RESET}"
+
+GELLO_COMPAT_WRAPPER="$PACKAGE_ROOT/polymetis_lerobot_mujoco/scripts/start_gello_panda_compat.sh"
+if [ -f "$GELLO_COMPAT_WRAPPER" ]; then
+    if ! grep -q "tmux list-sessions" "$GELLO_COMPAT_WRAPPER"; then
+        echo -e "${YELLOW_BOLD}Warning: ${GELLO_COMPAT_WRAPPER} does not contain the tmux list-sessions fix.${RESET}"
+        echo -e "${YELLOW_BOLD}Run 'git pull' on the host checkout, or do not expect the GELLO compatibility launcher to work.${RESET}"
+    fi
+    echo -e "${GREEN_BOLD}GELLO compatibility wrapper: $(grep -m1 'tmux list-sessions' "$GELLO_COMPAT_WRAPPER" || true)${RESET}"
 fi
 
 # Check if DISPLAY is set
-if [ "$DISPLAY" ]; then
+if [ "${DISPLAY:-}" ]; then
     xhost + local:root
 fi
 
@@ -59,7 +55,7 @@ for FOLDER in ros2_ws/src env log data; do
 done
 
 # Create the .claude_container, so sessions with claude inside docker persist
-for FOLDER in .claude_container; do 
+for FOLDER in .claude_container .micromamba_container .local_container .miniconda3_container gello_software; do
     HOST_PATH="$PACKAGE_ROOT/$FOLDER"
     if [ ! -d "$HOST_PATH" ]; then
         echo -e "${YELLOW_BOLD}Warning: $HOST_PATH does not exist. Creating it...${RESET}"
@@ -73,13 +69,20 @@ docker run \
     --privileged \
     --net host \
     --ipc host \
-    -e DISPLAY=$DISPLAY \
+    -e DISPLAY=${DISPLAY:-} \
+    -e MAMBA_ROOT_PREFIX=/home/${CONTAINER_USER}/micromamba \
+    -e PATH=/home/${CONTAINER_USER}/.local/bin:/opt/fer_lerobot_venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     -v /tmp/.X11-unix:/tmp/.X11-unix \
     -v ~/.Xauthority:/home/${CONTAINER_USER}/.Xauthority \
     -v $PACKAGE_ROOT/ros2_ws:/home/${CONTAINER_USER}/ros2_ws \
     -v $PACKAGE_ROOT/env:/home/${CONTAINER_USER}/env \
     -v $PACKAGE_ROOT/data:/home/${CONTAINER_USER}/data \
+    -v $PACKAGE_ROOT/polymetis_lerobot_mujoco:/home/${CONTAINER_USER}/polymetis_lerobot_mujoco \
+    -v $PACKAGE_ROOT/gello_software:/home/${CONTAINER_USER}/gello_software \
+    -v $PACKAGE_ROOT/.micromamba_container:/home/${CONTAINER_USER}/micromamba \
+    -v $PACKAGE_ROOT/.local_container:/home/${CONTAINER_USER}/.local \
+    -v $PACKAGE_ROOT/.miniconda3_container:/home/${CONTAINER_USER}/miniconda3 \
     -v $PACKAGE_ROOT/.claude_container:/home/${CONTAINER_USER}/.claude \
     --entrypoint /bin/bash \
     --rm \
-    $PACKAGE_NAME/ros:jazzy_moveit 
+    $PACKAGE_NAME/ros:jazzy_moveit
